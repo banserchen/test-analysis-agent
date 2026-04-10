@@ -55,7 +55,7 @@ _TRIGGERED_JOB_PATTERN = re.compile(
 )
 
 _TRIGGERED_JOB_RESULT_PATTERN = re.compile(
-    r"(?:job\s+)?['\"]?([^\s'\"]+)['\"]?\s+#(\d+)\s+completed[^\n]{0,100}(SUCCESS|FAILURE|UNSTABLE|ABORTED)",
+    r"(?:job\s+)?['\"]?([^\s'\"]{1,200})['\"]?\s+#(\d+)\s+completed[^\n]{0,100}(SUCCESS|FAILURE|UNSTABLE|ABORTED)",
     re.IGNORECASE,
 )
 

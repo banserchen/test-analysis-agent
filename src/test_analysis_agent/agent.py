@@ -310,8 +310,8 @@ class AnalysisAgent:
         if not test_class:
             return None
 
-        # Convert class name to potential file paths
-        possible_paths = _class_to_paths(test_class, test_path)
+        # Convert class name to potential file paths (using resolved base for safety)
+        possible_paths = _class_to_paths(test_class, str(base))
         for path in possible_paths:
             # Ensure resolved path stays within the base directory
             try:

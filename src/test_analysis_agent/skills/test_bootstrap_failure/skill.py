@@ -1,4 +1,4 @@
-"""Skill implementation: pytest/pip/venv bootstrap failure diagnosis."""
+"""技能实现：pytest/pip/venv 启动失败诊断。"""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Any
 from test_analysis_agent.skills.base import BaseSkill
 
 _PHASE_PATTERNS: list[tuple[str, re.Pattern[str], str]] = [
-    # pip install failures
+    # pip 安装失败
     (
         "pip_install",
         re.compile(
@@ -18,9 +18,9 @@ _PHASE_PATTERNS: list[tuple[str, re.Pattern[str], str]] = [
             r"subprocess-exited-with-error)",
             re.IGNORECASE,
         ),
-        "Check requirements file for version conflicts or missing packages",
+        "检查 requirements 文件中的版本冲突或缺失包",
     ),
-    # venv creation failures
+    # venv 创建失败
     (
         "venv_creation",
         re.compile(
@@ -29,9 +29,9 @@ _PHASE_PATTERNS: list[tuple[str, re.Pattern[str], str]] = [
             r"(?:No such file or directory.*python))",
             re.IGNORECASE,
         ),
-        "Ensure the correct Python version is installed and accessible",
+        "确认正确的 Python 版本已安装且路径可访问",
     ),
-    # pytest collection errors
+    # pytest 收集错误
     (
         "pytest_collection",
         re.compile(
@@ -40,9 +40,9 @@ _PHASE_PATTERNS: list[tuple[str, re.Pattern[str], str]] = [
             r"(?:no tests ran|collected 0 items / \d+ error))",
             re.IGNORECASE,
         ),
-        "Fix import errors or missing dependencies in test modules",
+        "修复测试模块中的导入错误或缺失依赖",
     ),
-    # pytest startup failures
+    # pytest 启动失败
     (
         "pytest_startup",
         re.compile(
@@ -51,23 +51,23 @@ _PHASE_PATTERNS: list[tuple[str, re.Pattern[str], str]] = [
             r"(?:conftest\.py|plugin).*(?:Error|Exception))",
             re.IGNORECASE,
         ),
-        "Check conftest.py and pytest plugins for configuration errors",
+        "检查 conftest.py 和 pytest 插件的配置错误",
     ),
 ]
 
 
 class TestBootstrapFailureSkill(BaseSkill):
-    """Diagnose pytest, pip, or virtualenv startup failures that prevent test execution."""
+    """诊断 pytest、pip 或 virtualenv 启动失败，导致测试无法执行的问题。"""
 
     name = "test_bootstrap_failure"
-    description = "Diagnose pytest, pip, or virtualenv startup failures that prevent test execution"
+    description = "诊断 pytest、pip 或 virtualenv 启动失败，导致测试无法执行"
     version = "1.0.0"
 
     def can_handle(self, context: dict[str, Any]) -> bool:
         log_text = context.get("log_text", "")
         if not log_text:
             return False
-        # Check if log shows signs of bootstrap issues
+        # 检查日志是否存在启动问题的迹象
         return bool(re.search(
             r"(?:pip install|virtualenv|venv|pytest.*(?:ERROR|INTERNALERROR)|"
             r"collected 0 items|no tests ran)",
@@ -81,7 +81,7 @@ class TestBootstrapFailureSkill(BaseSkill):
         for phase, pattern, suggestion in _PHASE_PATTERNS:
             match = pattern.search(log_text)
             if match:
-                # Extract nearby context for error_details
+                # 提取错误附近的上下文作为 error_details
                 start = max(0, match.start() - 200)
                 end = min(len(log_text), match.end() + 200)
                 error_details = log_text[start:end].strip()

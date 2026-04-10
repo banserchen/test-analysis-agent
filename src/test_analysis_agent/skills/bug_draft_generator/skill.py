@@ -1,4 +1,4 @@
-"""Skill implementation: Automatic bug draft generation."""
+"""技能实现：自动生成缺陷单草稿。"""
 
 from __future__ import annotations
 
@@ -8,10 +8,10 @@ from test_analysis_agent.skills.base import BaseSkill
 
 
 class BugDraftGeneratorSkill(BaseSkill):
-    """Automatically generate bug report drafts from analysis results."""
+    """根据分析结果自动生成缺陷单草稿。"""
 
     name = "bug_draft_generator"
-    description = "Automatically generate bug report drafts from analysis results"
+    description = "根据分析结果自动生成缺陷单草稿"
     version = "1.0.0"
 
     def can_handle(self, context: dict[str, Any]) -> bool:
@@ -32,7 +32,7 @@ class BugDraftGeneratorSkill(BaseSkill):
                 severity = severity.value
             should_file = _get(issue, "should_file_bug", False)
 
-            # Only generate drafts for issues worth filing
+            # 仅对值得提单的问题生成草稿
             if not should_file and severity not in ("critical", "high"):
                 continue
 
@@ -46,23 +46,23 @@ class BugDraftGeneratorSkill(BaseSkill):
             affected_tests = _get(issue, "affected_tests", [])
             log_evidence = _get(issue, "log_evidence", "")
 
-            # Build structured bug description
+            # 构建结构化的缺陷描述
             desc_parts = [
-                f"## Summary\n\n{description_text}",
-                f"\n## Root Cause Analysis\n\n{root_cause}" if root_cause else "",
-                f"\n## Log Evidence\n\n```\n{log_evidence}\n```" if log_evidence else "",
-                "\n## Affected Tests\n\n"
+                f"## 概要\n\n{description_text}",
+                f"\n## 根因分析\n\n{root_cause}" if root_cause else "",
+                f"\n## 日志证据\n\n```\n{log_evidence}\n```" if log_evidence else "",
+                "\n## 受影响的测试\n\n"
                 + "\n".join(f"- `{t}`" for t in affected_tests)
                 if affected_tests else "",
-                f"\n## Suggestion\n\n{suggestion}" if suggestion else "",
-                f"\n---\n*Auto-generated from {job_name} #{build_number}*",
+                f"\n## 修复建议\n\n{suggestion}" if suggestion else "",
+                f"\n---\n*由 {job_name} #{build_number} 自动生成*",
             ]
             full_description = "\n".join(p for p in desc_parts if p)
 
-            # Infer component from category
+            # 从分类推断组件
             component = _category_to_component(category)
 
-            # Generate labels
+            # 生成标签
             labels = [f"severity:{severity}", f"category:{category}", "auto-generated"]
             if affected_tests:
                 labels.append("test-failure")
@@ -72,11 +72,11 @@ class BugDraftGeneratorSkill(BaseSkill):
                 "severity": severity,
                 "component": component,
                 "description": full_description,
-                "steps_to_reproduce": f"1. Run Jenkins job `{job_name}` build #{build_number}\n"
-                f"2. Observe failure in the {category} stage/area",
-                "expected_behavior": "The pipeline should complete successfully",
+                "steps_to_reproduce": f"1. 运行 Jenkins 任务 `{job_name}` 构建 #{build_number}\n"
+                f"2. 观察 {category} 阶段/区域的失败",
+                "expected_behavior": "流水线应当成功完成",
                 "actual_behavior": description_text,
-                "environment": f"CI Pipeline: {job_name} #{build_number}",
+                "environment": f"CI 流水线：{job_name} #{build_number}",
                 "labels": labels,
             })
 
@@ -87,22 +87,22 @@ class BugDraftGeneratorSkill(BaseSkill):
 
 
 def _category_to_component(category: str) -> str:
-    """Map a failure category to a likely component name."""
+    """将失败分类映射到可能的组件名称。"""
     mapping = {
-        "environment_error": "Infrastructure",
-        "dependency_error": "Dependencies",
-        "deployment_error": "Deployment",
-        "configuration_error": "Configuration",
-        "network_error": "Network/Infrastructure",
-        "permission_error": "Security/Permissions",
-        "test_startup_failure": "Test Infrastructure",
-        "test_case_failure": "Product",
-        "test_infrastructure_error": "Test Infrastructure",
-        "timeout_error": "Performance",
-        "resource_error": "Infrastructure",
-        "code_bug": "Product",
+        "environment_error": "基础设施",
+        "dependency_error": "依赖管理",
+        "deployment_error": "部署",
+        "configuration_error": "配置",
+        "network_error": "网络/基础设施",
+        "permission_error": "安全/权限",
+        "test_startup_failure": "测试基础设施",
+        "test_case_failure": "产品",
+        "test_infrastructure_error": "测试基础设施",
+        "timeout_error": "性能",
+        "resource_error": "基础设施",
+        "code_bug": "产品",
     }
-    return mapping.get(category, "General")
+    return mapping.get(category, "通用")
 
 
 def _get(obj: Any, key: str, default: Any = None) -> Any:

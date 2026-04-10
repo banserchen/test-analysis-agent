@@ -1,4 +1,4 @@
-"""Tests for all 8 new skill packages."""
+"""8 个新技能包的测试。"""
 
 from test_analysis_agent.models.schemas import (
     AnalysisReport,
@@ -51,7 +51,7 @@ class TestJenkinsLogRootCause:
         skill = JenkinsLogRootCauseSkill()
         result = skill.execute({"log_text": "INFO: Success\nINFO: Done"})
         assert len(result["root_cause_snippets"]) == 0
-        assert result["primary_error"] == "No clear error detected"
+        assert result["primary_error"] == "未检测到明确错误"
 
     def test_confidence_ordering(self):
         skill = JenkinsLogRootCauseSkill()

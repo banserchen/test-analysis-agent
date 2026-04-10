@@ -1,11 +1,11 @@
 name: code.stacktrace_mapper
 version: "1.0.0"
-description: "Map stack trace frames to source code file paths and line numbers."
-author: "Test Analysis Agent Team"
+description: "将栈追踪帧映射到源代码文件路径和行号。"
+author: "测试分析 Agent 团队"
 tags:
-  - code
-  - stacktrace
-  - mapping
+  - 代码
+  - 栈追踪
+  - 行级定位
 
 input_schema:
   type: object
@@ -14,12 +14,12 @@ input_schema:
   properties:
     stack_trace:
       type: string
-      description: "Raw stack trace text."
+      description: "原始栈追踪文本。"
     language_hint:
       type: string
       enum: [python, java, javascript, auto]
       default: auto
-      description: "Hint for which language parser to use."
+      description: "语言提示，指定使用哪种解析器。"
 
 output_schema:
   type: object
@@ -39,13 +39,13 @@ output_schema:
             type: string
           is_user_code:
             type: boolean
-            description: "True if frame is from user code (not stdlib/third-party)."
+            description: "是否为用户代码（非标准库/第三方库）。"
     language:
       type: string
-      description: "Detected language."
+      description: "检测到的编程语言。"
     deepest_user_frame:
       type: object
-      description: "The innermost frame that belongs to user code."
+      description: "最深层的用户代码帧（最接近错误的项目代码）。"
       properties:
         file:
           type: string

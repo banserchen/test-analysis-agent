@@ -1,11 +1,11 @@
 name: bug.draft_generator
 version: "1.0.0"
-description: "Automatically generate bug report drafts from analysis results."
-author: "Test Analysis Agent Team"
+description: "根据分析结果自动生成缺陷单草稿。"
+author: "测试分析 Agent 团队"
 tags:
-  - bug
-  - draft
-  - report
+  - 缺陷
+  - 草稿
+  - 报告
 
 input_schema:
   type: object
@@ -14,7 +14,7 @@ input_schema:
   properties:
     issues:
       type: array
-      description: "List of AnalyzedIssue objects from the analysis pipeline."
+      description: "分析流水线输出的 AnalyzedIssue 对象列表。"
       items:
         type: object
         properties:
@@ -38,10 +38,10 @@ input_schema:
             type: string
     job_name:
       type: string
-      description: "Jenkins job name."
+      description: "Jenkins 任务名称。"
     build_number:
       type: integer
-      description: "Jenkins build number."
+      description: "Jenkins 构建编号。"
 
 output_schema:
   type: object
@@ -60,7 +60,7 @@ output_schema:
             type: string
           description:
             type: string
-            description: "Full bug description in Markdown."
+            description: "Markdown 格式的完整缺陷描述。"
           steps_to_reproduce:
             type: string
           expected_behavior:

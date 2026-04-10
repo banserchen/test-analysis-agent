@@ -1,4 +1,4 @@
-"""Skill: Allure test case failure classification and attribution."""
+"""技能：Allure 失败用例分类归因。"""
 
 from test_analysis_agent.skills.allure_case_failure_classifier.skill import AllureCaseFailureClassifierSkill
 

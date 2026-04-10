@@ -1,4 +1,4 @@
-"""Skills package - extensible skill/plugin system for the analysis agent."""
+"""技能包——分析 Agent 的可扩展技能/插件系统。"""
 
 from test_analysis_agent.skills.allure_case_failure_classifier import AllureCaseFailureClassifierSkill
 from test_analysis_agent.skills.bug_draft_generator import BugDraftGeneratorSkill

@@ -1,4 +1,4 @@
-"""Skill implementation: Jenkins downstream job call chain tracing."""
+"""技能实现：Jenkins 下游 Job 调用链追踪。"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from test_analysis_agent.skills.base import BaseSkill
 
-# Patterns matching common Jenkins triggered-job log lines
+# 匹配常见 Jenkins 触发 Job 日志行的模式
 _TRIGGER_PATTERNS: list[re.Pattern[str]] = [
     # "Starting building: folder/job-name #123"
     re.compile(r"Starting building:\s+(?P<job>[^\s#]+)\s+#(?P<num>\d+)", re.IGNORECASE),
@@ -30,15 +30,15 @@ _RESULT_PATTERNS: list[re.Pattern[str]] = [
 
 
 class JenkinsDownstreamTraceSkill(BaseSkill):
-    """Trace parent-child Jenkins job call chains and identify which downstream job caused the failure."""
+    """追踪 Jenkins 主子 Job 调用链，定位导致失败的下游任务。"""
 
     name = "jenkins_downstream_trace"
-    description = "Trace parent-child Jenkins job call chains and identify which downstream job caused the failure"
+    description = "追踪 Jenkins 主子 Job 调用链，定位导致失败的下游任务"
     version = "1.0.0"
 
     def can_handle(self, context: dict[str, Any]) -> bool:
         log_text = context.get("log_text", "")
-        # Only useful when there are triggered / downstream job references
+        # 仅当日志中存在触发/下游 Job 的引用时才启用
         return bool(log_text) and bool(
             re.search(r"(?:Starting building|Triggering|triggered)", log_text, re.IGNORECASE)
         )
@@ -49,7 +49,7 @@ class JenkinsDownstreamTraceSkill(BaseSkill):
 
         triggered: dict[str, dict[str, Any]] = {}  # keyed by job_name
 
-        # Pass 1: find triggered jobs
+        # 第一遍：查找触发的 Job
         for idx, line in enumerate(lines):
             for pat in _TRIGGER_PATTERNS:
                 m = pat.search(line)
@@ -64,7 +64,7 @@ class JenkinsDownstreamTraceSkill(BaseSkill):
                     }
                     break
 
-        # Also pull from stage_results if provided
+            # 也从 stage_results 中提取（如有提供）
         stage_results = context.get("stage_results", [])
         if stage_results:
             for stage in stage_results:
@@ -77,10 +77,10 @@ class JenkinsDownstreamTraceSkill(BaseSkill):
                             "trigger_line": 0,
                         }
                     else:
-                        # Enrich status from stage_results
+                        # 用 stage_results 丰富状态信息
                         triggered[tj.job_name]["status"] = tj.status
 
-        # Pass 2: find completion statuses
+        # 第二遍：查找完成状态
         for line in lines:
             for pat in _RESULT_PATTERNS:
                 m = pat.search(line)
@@ -93,22 +93,22 @@ class JenkinsDownstreamTraceSkill(BaseSkill):
 
         call_chain = sorted(triggered.values(), key=lambda x: x.get("trigger_line", 0))
 
-        # Build failing chain
+        # 构建失败链路
         failing_chain: list[str] = []
         for entry in call_chain:
             if entry["status"] in ("failure", "unstable"):
                 failing_chain.append(entry["job_name"])
 
-        # Summary
+        # 摘要
         if failing_chain:
             summary = (
-                f"Downstream call chain has {len(call_chain)} triggered job(s). "
-                f"Failing path: {' → '.join(failing_chain)}."
+                f"下游调用链共触发 {len(call_chain)} 个 Job。"
+                f"失败路径：{' → '.join(failing_chain)}。"
             )
         elif call_chain:
-            summary = f"Downstream call chain has {len(call_chain)} triggered job(s), all succeeded."
+            summary = f"下游调用链共触发 {len(call_chain)} 个 Job，全部成功。"
         else:
-            summary = "No downstream jobs detected in the log."
+            summary = "日志中未检测到下游 Job。"
 
         return {
             "call_chain": call_chain,

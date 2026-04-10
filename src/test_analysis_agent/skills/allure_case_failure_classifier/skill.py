@@ -1,4 +1,4 @@
-"""Skill implementation: Allure test case failure classification and attribution."""
+"""技能实现：Allure 失败用例分类归因。"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from test_analysis_agent.skills.base import BaseSkill
 
-# Heuristic keyword → failure class mapping
+# 启发式关键词 → 失败类别映射
 _CLASS_RULES: list[tuple[str, re.Pattern[str]]] = [
     ("infrastructure", re.compile(
         r"(?:docker|container|agent|slave|node|k8s|kubernetes|jenkins|"
@@ -35,10 +35,10 @@ _CLASS_RULES: list[tuple[str, re.Pattern[str]]] = [
 
 
 class AllureCaseFailureClassifierSkill(BaseSkill):
-    """Classify and attribute failed Allure test cases by failure type."""
+    """对 Allure 报告中的失败用例进行分类归因。"""
 
     name = "allure_case_failure_classifier"
-    description = "Classify and attribute failed Allure test cases by failure type"
+    description = "对 Allure 报告中的失败用例进行分类归因"
     version = "1.0.0"
 
     def can_handle(self, context: dict[str, Any]) -> bool:
@@ -51,7 +51,7 @@ class AllureCaseFailureClassifierSkill(BaseSkill):
         by_class: dict[str, int] = {}
 
         for failure in failures:
-            # Support both dict and object access
+            # 支持 dict 和 object 两种访问方式
             test_name = _get(failure, "test_name", "unknown")
             error_msg = _get(failure, "error_message", "")
             stack_trace = _get(failure, "stack_trace", "")
@@ -61,28 +61,28 @@ class AllureCaseFailureClassifierSkill(BaseSkill):
 
             failure_class = "unknown"
             confidence = 0.3
-            reason = "Unable to classify from available information"
+            reason = "无法从现有信息中判断失败类别"
 
             for cls, pattern in _CLASS_RULES:
                 if pattern.search(combined):
                     failure_class = cls
                     confidence = 0.7
-                    reason = f"Matched pattern for {cls} in error/trace"
+                    reason = f"在错误信息/栈追踪中匹配到 {cls} 模式"
                     break
 
-            # Check Allure categories for hints
+            # 检查 Allure 分类标签中的提示
             if isinstance(categories, list):
                 for cat in categories:
                     cat_lower = cat.lower() if isinstance(cat, str) else ""
                     if "product" in cat_lower or "bug" in cat_lower:
                         failure_class = "product_bug"
                         confidence = 0.8
-                        reason = f"Allure category indicates product defect: {cat}"
+                        reason = f"Allure 分类标签表明为产品缺陷：{cat}"
                         break
                     if "flaky" in cat_lower or "intermittent" in cat_lower:
                         failure_class = "flaky"
                         confidence = 0.75
-                        reason = f"Allure category indicates flaky test: {cat}"
+                        reason = f"Allure 分类标签表明为不稳定测试：{cat}"
                         break
 
             classifications.append({
@@ -103,7 +103,7 @@ class AllureCaseFailureClassifierSkill(BaseSkill):
 
 
 def _get(obj: Any, key: str, default: Any = None) -> Any:
-    """Get a value from either a dict or an object attribute."""
+    """从 dict 或对象属性中获取值。"""
     if isinstance(obj, dict):
         return obj.get(key, default)
     return getattr(obj, key, default)

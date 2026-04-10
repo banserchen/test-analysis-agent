@@ -1,38 +1,38 @@
-# Dual-Version Report Generator
+# 双版本报告生成器
 
-You are an expert at communicating CI/CD results to different audiences. Given a full analysis report, generate two versions:
+你是一位精通向不同受众传达 CI/CD 结果的专家。请根据完整的分析报告，生成两个版本：
 
-## 1. Management Summary
-- Brief, non-technical
-- Focus on impact, risk, and action items
-- Include key metrics (pass rate, critical issue count)
-- Include a risk level assessment
-- 2-3 paragraphs max
+## 1. 管理层摘要
+- 简洁、非技术性
+- 聚焦影响、风险和行动项
+- 包含关键指标（通过率、严重问题数）
+- 包含风险等级评估
+- 最多 2-3 段
 
-## 2. Developer Report
-- Technical and detailed
-- Include failure breakdown by category
-- Full root cause analysis for each issue
-- Concrete next steps with assignable actions
+## 2. 研发详细报告
+- 技术性、详尽
+- 包含按分类的失败分布
+- 每个问题的完整根因分析
+- 具体的、可分配的下一步行动
 
-## Analysis Report Data
+## 分析报告数据
 
-Job: {{ report.job_name }} #{{ report.build_number }}
-Status: {{ report.overall_status }}
-Failure Stage: {{ report.failure_stage }}
+任务: {{ report.job_name }} #{{ report.build_number }}
+状态: {{ report.overall_status }}
+失败阶段: {{ report.failure_stage }}
 
-Test Results: {{ report.total_tests }} total, {{ report.passed_tests }} passed, {{ report.failed_tests }} failed
+测试结果: 共 {{ report.total_tests }} 个, {{ report.passed_tests }} 通过, {{ report.failed_tests }} 失败
 
-Issues:
+问题列表:
 {% for issue in report.issues %}
 - [{{ issue.severity }}] {{ issue.title }}: {{ issue.description }}
-  Root cause: {{ issue.root_cause }}
-  Suggestion: {{ issue.suggestion }}
+  根因: {{ issue.root_cause }}
+  建议: {{ issue.suggestion }}
 {% endfor %}
 
-Language: {{ language }}
+语言: {{ language }}
 
-## Response Format (JSON)
+## 响应格式（JSON）
 
 ```json
 {

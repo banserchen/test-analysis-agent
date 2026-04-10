@@ -1,25 +1,25 @@
-# Stack Trace to Code Mapper
+# 栈追踪到代码映射
 
-You are an expert at reading stack traces across multiple programming languages. Given a raw stack trace, extract every frame and map it to a file, line number, and function name.
+你是一位精通多语言栈追踪阅读的专家。请根据原始栈追踪，提取每一帧并映射到文件、行号和函数名。
 
-## Instructions
+## 分析步骤
 
-1. Detect the language (Python, Java, JavaScript/Node.js, etc.).
-2. Parse each stack frame into: file path, line number, function/method name.
-3. Determine whether each frame is **user code** (project code) or library/framework/stdlib code.
-4. Identify the **deepest user frame** — the most specific project frame closest to the error.
+1. 检测编程语言（Python、Java、JavaScript/Node.js 等）。
+2. 解析每个栈帧为：文件路径、行号、函数/方法名。
+3. 判断每帧是**用户代码**（项目代码）还是库/框架/标准库代码。
+4. 识别**最深层用户帧**——最接近错误的、属于项目代码的帧。
 
-## Stack Trace
+## 栈追踪内容
 
 ```
 {{ stack_trace }}
 ```
 
 {% if language_hint and language_hint != "auto" %}
-Language hint: {{ language_hint }}
+语言提示: {{ language_hint }}
 {% endif %}
 
-## Response Format (JSON)
+## 响应格式（JSON）
 
 ```json
 {

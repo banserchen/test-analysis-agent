@@ -1,28 +1,28 @@
-# Environment Instability Detection
+# 环境不稳定性检测
 
-You are an infrastructure reliability expert. Analyze the CI/CD log below for signs of **environment instability** — intermittent or transient issues that indicate the CI environment itself is unhealthy, separate from any code bugs.
+你是一位基础设施可靠性专家。请分析以下 CI/CD 日志，寻找**环境不稳定**的信号——间歇性或瞬态问题，表明 CI 环境自身不健康，与代码缺陷无关。
 
-## Instructions
+## 分析步骤
 
-1. Look for patterns indicating:
-   - **Network instability** — retries, timeouts, connection resets
-   - **Dependency source outages** — PyPI/npm/Maven registry errors, mirror failures
-   - **Permission drift** — sudden permission denied errors that weren't present before
-   - **DNS issues** — name resolution failures
-   - **Disk pressure** — no space left, quota exceeded
-   - **Memory pressure** — OOM kills, allocation failures
-   - **Clock skew** — certificate validity errors, timestamp mismatches
-   - **Certificate issues** — SSL/TLS verification failures
-2. Count occurrences and assess severity.
-3. Provide a summary of findings.
+1. 寻找以下模式：
+   - **网络不稳定** — 重试、超时、连接重置
+   - **依赖源故障** — PyPI/npm/Maven 仓库错误、镜像故障
+   - **权限漂移** — 之前不存在的权限拒绝错误
+   - **DNS 问题** — 域名解析失败
+   - **磁盘压力** — 空间不足、配额超限
+   - **内存压力** — OOM 终止、分配失败
+   - **时钟偏移** — 证书有效性错误、时间戳不匹配
+   - **证书问题** — SSL/TLS 验证失败
+2. 统计出现次数并评估严重程度。
+3. 提供发现总结。
 
-## CI Log
+## CI 日志
 
 ```
 {{ log_text }}
 ```
 
-## Response Format (JSON)
+## 响应格式（JSON）
 
 ```json
 {

@@ -1,12 +1,12 @@
 name: report.summary_generator
 version: "1.0.0"
-description: "Generate dual-version reports: a management summary and a detailed developer report."
-author: "Test Analysis Agent Team"
+description: "生成双版本报告：管理层摘要和研发详细报告。"
+author: "测试分析 Agent 团队"
 tags:
-  - report
-  - summary
-  - management
-  - developer
+  - 报告
+  - 摘要
+  - 管理层
+  - 研发
 
 input_schema:
   type: object
@@ -15,11 +15,11 @@ input_schema:
   properties:
     report:
       type: object
-      description: "Full AnalysisReport object."
+      description: "完整的 AnalysisReport 对象。"
     language:
       type: string
       default: "zh-CN"
-      description: "Output language (zh-CN or en)."
+      description: "输出语言（zh-CN 或 en）。"
 
 output_schema:
   type: object
@@ -33,7 +33,7 @@ output_schema:
           type: string
         one_liner:
           type: string
-          description: "Single sentence status for stakeholders."
+          description: "面向管理层的一句话状态概述。"
         key_metrics:
           type: object
           properties:
@@ -54,7 +54,7 @@ output_schema:
             type: string
         body:
           type: string
-          description: "2-3 paragraph summary in Markdown."
+          description: "2-3 段 Markdown 格式的摘要。"
     developer_report:
       type: object
       properties:
@@ -75,7 +75,7 @@ output_schema:
                   type: string
         detailed_findings:
           type: string
-          description: "Full technical analysis in Markdown."
+          description: "Markdown 格式的完整技术分析。"
         next_steps:
           type: array
           items:

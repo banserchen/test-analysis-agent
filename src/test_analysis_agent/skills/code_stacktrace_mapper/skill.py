@@ -1,4 +1,4 @@
-"""Skill implementation: Stack trace to code file/line mapping."""
+"""技能实现：栈追踪到代码文件/行级定位。"""
 
 from __future__ import annotations
 
@@ -31,14 +31,14 @@ _STDLIB_MARKERS = {
 
 
 class CodeStacktraceMapperSkill(BaseSkill):
-    """Map stack trace frames to source code file paths and line numbers."""
+    """将栈追踪帧映射到源代码文件路径和行号。"""
 
     name = "code_stacktrace_mapper"
-    description = "Map stack trace frames to source code file paths and line numbers"
+    description = "将栈追踪帧映射到源代码文件路径和行号"
     version = "1.0.0"
 
     def can_handle(self, context: dict[str, Any]) -> bool:
-        # Look for stack traces in test_failures or directly in context
+        # 在 test_failures 或直接上下文中查找栈追踪
         if context.get("stack_trace"):
             return True
         failures = context.get("test_failures", [])
@@ -51,7 +51,7 @@ class CodeStacktraceMapperSkill(BaseSkill):
         stack_trace = context.get("stack_trace", "")
         language_hint = context.get("language_hint", "auto")
 
-        # If no direct stack_trace, collect from test_failures
+        # 如果没有直接的 stack_trace，从 test_failures 中收集
         if not stack_trace:
             traces: list[str] = []
             for f in context.get("test_failures", []):
@@ -65,7 +65,7 @@ class CodeStacktraceMapperSkill(BaseSkill):
 
         language, frames = _parse_stack_trace(stack_trace, language_hint)
 
-        # Find deepest user frame
+        # 查找最深层的用户代码帧
         deepest = None
         for frame in reversed(frames):
             if frame["is_user_code"]:
@@ -80,8 +80,8 @@ class CodeStacktraceMapperSkill(BaseSkill):
 
 
 def _parse_stack_trace(text: str, hint: str) -> tuple[str, list[dict[str, Any]]]:
-    """Parse a stack trace and return (language, frames)."""
-    # Try to detect language
+    """解析栈追踪，返回 (语言, 帧列表)。"""
+    # 尝试检测语言
     if hint != "auto":
         language = hint
     elif _PYTHON_FRAME.search(text):
@@ -127,7 +127,7 @@ def _parse_stack_trace(text: str, hint: str) -> tuple[str, list[dict[str, Any]]]
                 "is_user_code": not _is_stdlib(filepath, "javascript"),
             })
     else:
-        # Best effort: try all patterns
+        # 尽力尝试：使用所有模式
         for m in _PYTHON_FRAME.finditer(text):
             frames.append({
                 "file": m.group("file"),
@@ -141,7 +141,7 @@ def _parse_stack_trace(text: str, hint: str) -> tuple[str, list[dict[str, Any]]]
 
 
 def _is_stdlib(path_or_name: str, language: str) -> bool:
-    """Check if a file path or class name belongs to stdlib/third-party."""
+    """检查文件路径或类名是否属于标准库/第三方库。"""
     markers = _STDLIB_MARKERS.get(language, [])
     lower = path_or_name.lower()
     return any(marker.lower() in lower for marker in markers)

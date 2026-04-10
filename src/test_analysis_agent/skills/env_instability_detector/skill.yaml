@@ -1,12 +1,12 @@
 name: env.instability_detector
 version: "1.0.0"
-description: "Detect environment instability signals — network flakiness, dependency source outages, permission drifts, etc."
-author: "Test Analysis Agent Team"
+description: "检测环境不稳定信号——网络抖动、依赖源故障、权限漂移等。"
+author: "测试分析 Agent 团队"
 tags:
-  - environment
-  - network
-  - dependency
-  - instability
+  - 环境
+  - 网络
+  - 依赖源
+  - 稳定性
 
 input_schema:
   type: object
@@ -15,7 +15,7 @@ input_schema:
   properties:
     log_text:
       type: string
-      description: "CI console log text."
+      description: "CI 控制台日志文本。"
 
 output_schema:
   type: object

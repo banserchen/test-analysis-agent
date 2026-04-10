@@ -1,4 +1,4 @@
-"""Post-processing and output validation for jenkins.log_root_cause skill."""
+"""jenkins.log_root_cause 技能的后处理和输出校验。"""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from typing import Any
 
 
 def validate_output(data: dict[str, Any]) -> tuple[bool, list[str]]:
-    """Validate the structured output from the LLM.
+    """校验 LLM 的结构化输出。
 
-    Returns:
-        A tuple of (is_valid, list_of_error_messages).
+    返回:
+        (是否合法, 错误信息列表) 的元组。
     """
     errors: list[str] = []
 

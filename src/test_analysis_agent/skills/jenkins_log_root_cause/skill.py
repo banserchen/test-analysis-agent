@@ -1,4 +1,4 @@
-"""Skill implementation: Jenkins log root-cause analysis."""
+"""技能实现：Jenkins 日志根因分析。"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from test_analysis_agent.skills.base import BaseSkill
 
-# Patterns that indicate true errors (not just warnings)
+# 指示真正错误（不仅仅是警告）的模式
 _ERROR_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"(?:FATAL|SEVERE|CRITICAL)[:\s]", re.IGNORECASE), "runtime"),
     (re.compile(r"(?:error\[?\s*\w*\]?:\s)", re.IGNORECASE), "compilation"),
@@ -22,14 +22,14 @@ _ERROR_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"exit\s+code\s+[1-9]\d{0,2}", re.IGNORECASE), "runtime"),
 ]
 
-_CONTEXT_LINES = 5  # lines of context before/after an error line
+_CONTEXT_LINES = 5  # 错误行前后的上下文行数
 
 
 class JenkinsLogRootCauseSkill(BaseSkill):
-    """Locate error root causes in Jenkins build logs and extract key failure snippets."""
+    """定位 Jenkins 构建日志中的错误根因，抽取关键失败片段。"""
 
     name = "jenkins_log_root_cause"
-    description = "Locate error root causes in Jenkins build logs and extract key failure snippets"
+    description = "定位 Jenkins 构建日志中的错误根因，抽取关键失败片段"
     version = "1.0.0"
 
     def can_handle(self, context: dict[str, Any]) -> bool:
@@ -81,7 +81,7 @@ class JenkinsLogRootCauseSkill(BaseSkill):
         # Sort by confidence descending
         snippets.sort(key=lambda s: s["confidence"], reverse=True)
 
-        primary = snippets[0]["text"].split("\n")[0] if snippets else "No clear error detected"
+        primary = snippets[0]["text"].split("\n")[0] if snippets else "未检测到明确错误"
 
         return {
             "root_cause_snippets": snippets,
@@ -90,7 +90,7 @@ class JenkinsLogRootCauseSkill(BaseSkill):
 
 
 def _confidence_for(hit: dict[str, Any], lines: list[str]) -> float:
-    """Heuristic confidence: later errors in the log tend to be cascaded, not root cause."""
+    """启发式置信度：日志后半段的错误往往是级联效应，而非根因。"""
     total = len(lines) or 1
     position_ratio = hit["line_idx"] / total  # 0 = top, 1 = bottom
 

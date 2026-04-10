@@ -1,4 +1,4 @@
-"""Skill implementation: Environment instability detection."""
+"""技能实现：环境不稳定性检测。"""
 
 from __future__ import annotations
 
@@ -57,10 +57,10 @@ _INSTABILITY_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
 
 
 class EnvInstabilityDetectorSkill(BaseSkill):
-    """Detect environment instability signals in CI logs."""
+    """检测 CI 日志中的环境不稳定信号。"""
 
     name = "env_instability_detector"
-    description = "Detect environment instability — network, dependency sources, permissions, etc."
+    description = "检测环境不稳定性——网络、依赖源、权限等"
     version = "1.0.0"
 
     def can_handle(self, context: dict[str, Any]) -> bool:
@@ -88,9 +88,9 @@ class EnvInstabilityDetectorSkill(BaseSkill):
 
         if instabilities:
             cats = ", ".join(sorted(seen_categories))
-            summary = f"Environment instability detected in {len(instabilities)} category(ies): {cats}."
+            summary = f"检测到 {len(instabilities)} 类环境不稳定信号：{cats}。"
         else:
-            summary = "No environment instability signals detected."
+            summary = "未检测到环境不稳定信号。"
 
         return {
             "instabilities": instabilities,

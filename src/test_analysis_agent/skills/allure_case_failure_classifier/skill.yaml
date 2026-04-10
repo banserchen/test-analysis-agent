@@ -1,11 +1,11 @@
 name: allure.case_failure_classifier
 version: "1.0.0"
-description: "Classify and attribute failed Allure test cases by failure type (product bug, test bug, infra issue, etc.)."
-author: "Test Analysis Agent Team"
+description: "对 Allure 报告中的失败用例进行分类归因（产品缺陷、测试缺陷、基础设施问题等）。"
+author: "测试分析 Agent 团队"
 tags:
   - allure
-  - test-failure
-  - classification
+  - 用例失败
+  - 分类归因
 
 input_schema:
   type: object
@@ -14,7 +14,7 @@ input_schema:
   properties:
     test_failures:
       type: array
-      description: "List of TestCaseFailure objects from Allure parsing."
+      description: "从 Allure 解析得到的 TestCaseFailure 对象列表。"
       items:
         type: object
         properties:
@@ -55,4 +55,4 @@ output_schema:
           type: integer
         by_class:
           type: object
-          description: "Count per failure_class."
+          description: "每个 failure_class 的计数。"

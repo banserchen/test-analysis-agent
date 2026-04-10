@@ -1,31 +1,31 @@
-# Allure Test Case Failure Classification
+# Allure 失败用例分类归因
 
-You are an expert QA analyst. Given a list of failed test cases from an Allure report, classify each failure.
+你是一位资深的 QA 分析师。请根据 Allure 报告中的失败用例列表，对每个失败进行分类归因。
 
-## Instructions
+## 分析步骤
 
-1. For each failed test, determine the **failure class**:
-   - `product_bug` — the test correctly detected a bug in the product under test
-   - `test_bug` — the test itself has a defect (wrong assertion, outdated fixture, etc.)
-   - `infrastructure` — CI infrastructure issue (agent down, Docker failure, etc.)
-   - `environment` — environment misconfiguration (missing env var, wrong URL, etc.)
-   - `flaky` — the test is known to be non-deterministic
-   - `unknown` — cannot determine
-2. Provide a brief reason for your classification.
-3. Assign a confidence score (0.0–1.0).
+1. 针对每个失败用例，确定**失败类别**：
+   - `product_bug` — 测试正确地检测到了被测产品中的缺陷
+   - `test_bug` — 测试本身存在缺陷（断言错误、过期 fixture 等）
+   - `infrastructure` — CI 基础设施问题（Agent 宕机、Docker 故障等）
+   - `environment` — 环境配置错误（缺少环境变量、URL 错误等）
+   - `flaky` — 已知的不稳定/随机失败测试
+   - `unknown` — 无法判断
+2. 为你的分类提供简要理由。
+3. 分配置信度分数（0.0–1.0）。
 
-## Failed Test Cases
+## 失败用例列表
 
 {% for tc in test_failures %}
 ### {{ tc.test_name }}
-- Status: {{ tc.status }}
-- Error: {{ tc.error_message }}
-- Trace: {{ tc.stack_trace }}
-- Categories: {{ tc.categories }}
+- 状态: {{ tc.status }}
+- 错误信息: {{ tc.error_message }}
+- 栈追踪: {{ tc.stack_trace }}
+- 分类标签: {{ tc.categories }}
 
 {% endfor %}
 
-## Response Format (JSON)
+## 响应格式（JSON）
 
 ```json
 {

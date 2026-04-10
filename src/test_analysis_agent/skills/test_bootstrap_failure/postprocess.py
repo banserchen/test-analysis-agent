@@ -1,4 +1,4 @@
-"""Post-processing and output validation for test.bootstrap_failure skill."""
+"""test.bootstrap_failure 技能的后处理和输出校验。"""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Any
 
 
 def validate_output(data: dict[str, Any]) -> tuple[bool, list[str]]:
-    """Validate structured output."""
+    """校验结构化输出。"""
     errors: list[str] = []
 
     if not isinstance(data, dict):

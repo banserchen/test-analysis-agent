@@ -1,26 +1,26 @@
-# Test Bootstrap Failure Diagnosis
+# 测试启动失败诊断
 
-You are an expert Python CI/CD engineer. Analyze the following CI log to determine if the test run failed **before any tests executed** due to a bootstrap issue.
+你是一位资深的 Python CI/CD 工程师。请分析以下 CI 日志，判断测试运行是否在**任何测试执行之前**因启动问题而失败。
 
-## Instructions
+## 分析步骤
 
-1. Determine if the failure occurred during `pip install`, virtualenv/venv creation, pytest collection, or pytest startup.
-2. Extract the specific error message that caused the failure.
-3. Provide a concrete suggestion for how to fix the issue.
+1. 判断失败是否发生在 `pip install`、virtualenv/venv 创建、pytest 收集或 pytest 启动阶段。
+2. 提取导致失败的具体错误信息。
+3. 给出具体的修复建议。
 
-## CI Log
+## CI 日志
 
 ```
 {{ log_text }}
 ```
 
-## Response Format (JSON)
+## 响应格式（JSON）
 
 ```json
 {
   "is_bootstrap_failure": true,
   "bootstrap_phase": "pip_install | venv_creation | pytest_collection | pytest_startup | unknown",
-  "error_details": "<specific error message>",
-  "suggestion": "<concrete fix recommendation>"
+  "error_details": "<具体错误信息>",
+  "suggestion": "<具体修复建议>"
 }
 ```

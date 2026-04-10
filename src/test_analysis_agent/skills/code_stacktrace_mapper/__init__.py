@@ -1,4 +1,4 @@
-"""Skill: Stack trace to code file/line mapping."""
+"""技能：栈追踪到代码文件/行级定位。"""
 
 from test_analysis_agent.skills.code_stacktrace_mapper.skill import CodeStacktraceMapperSkill
 

@@ -81,7 +81,7 @@ class JenkinsLogRootCauseSkill(BaseSkill):
         # Sort by confidence descending
         snippets.sort(key=lambda s: s["confidence"], reverse=True)
 
-        primary = snippets[0]["text"].split("\n")[0] if snippets else "未检测到明确错误"
+        primary = snippets[0]["text"].split("\n")[0] if snippets and snippets[0].get("text") else "未检测到明确错误"
 
         return {
             "root_cause_snippets": snippets,

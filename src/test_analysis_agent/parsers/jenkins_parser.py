@@ -50,12 +50,12 @@ _ERROR_PATTERNS = [
 
 _TRIGGERED_JOB_PATTERN = re.compile(
     r"(?:Triggering|Starting|Building)\s+(?:a new build of\s+)?(?:job\s+)?['\"]?([^\s'\"]+)['\"]?"
-    r".*?#(\d+)",
+    r"[^#\n]{0,200}#(\d+)",
     re.IGNORECASE,
 )
 
 _TRIGGERED_JOB_RESULT_PATTERN = re.compile(
-    r"(?:job\s+)?['\"]?([^\s'\"]+)['\"]?\s+#(\d+)\s+completed.*?(SUCCESS|FAILURE|UNSTABLE|ABORTED)",
+    r"(?:job\s+)?['\"]?([^\s'\"]+)['\"]?\s+#(\d+)\s+completed[^\n]{0,100}(SUCCESS|FAILURE|UNSTABLE|ABORTED)",
     re.IGNORECASE,
 )
 

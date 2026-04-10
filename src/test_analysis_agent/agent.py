@@ -12,6 +12,7 @@ This is the core entry point that coordinates:
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -299,6 +300,11 @@ class AnalysisAgent:
         if not test_path:
             return None
 
+        base = Path(test_path).resolve()
+        # Validate the test_repo_path exists and is a directory
+        if not base.is_dir():
+            return None
+
         # Try to locate the test file based on test class name
         test_class = failure.test_class or failure.test_name
         if not test_class:
@@ -307,9 +313,15 @@ class AnalysisAgent:
         # Convert class name to potential file paths
         possible_paths = _class_to_paths(test_class, test_path)
         for path in possible_paths:
-            if path.exists():
+            # Ensure resolved path stays within the base directory
+            try:
+                resolved = path.resolve()
+                resolved.relative_to(base)
+            except (ValueError, OSError):
+                continue
+            if resolved.is_file():
                 try:
-                    content = path.read_text(encoding="utf-8")
+                    content = resolved.read_text(encoding="utf-8")
                     # Try to extract just the relevant test method
                     method_name = failure.test_name.split(".")[-1] if "." in failure.test_name else failure.test_name
                     excerpt = _extract_method(content, method_name)
@@ -381,11 +393,12 @@ def _class_to_paths(class_name: str, base_path: str) -> list[Path]:
         kt_path = base / "src/test/kotlin" / "/".join(file_parts) / f"{file_name}.kt"
         paths.append(kt_path)
 
-    # Try glob for partial match
+    # Try glob for partial match (sanitize to prevent glob injection)
     if parts:
-        last_part = parts[-1]
-        for ext in ["py", "java", "kt", "js", "ts"]:
-            paths.extend(base.rglob(f"*{last_part}*.{ext}"))
+        last_part = re.sub(r"[^\w]", "", parts[-1])  # Keep only alphanumeric/underscore
+        if last_part:
+            for ext in ["py", "java", "kt", "js", "ts"]:
+                paths.extend(base.rglob(f"*{last_part}*.{ext}"))
 
     return paths
 

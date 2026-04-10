@@ -1,0 +1,48 @@
+name: jenkins.downstream_trace
+version: "1.0.0"
+description: "追踪 Jenkins 主子 Job 调用链，定位导致失败的下游任务。"
+author: "测试分析 Agent 团队"
+tags:
+  - jenkins
+  - 下游追踪
+  - 调用链
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "父 Job 的 Jenkins 控制台日志。"
+    stage_results:
+      type: array
+      description: "已解析的流水线阶段结果（可选，用于丰富追踪信息）。"
+
+output_schema:
+  type: object
+  properties:
+    call_chain:
+      type: array
+      items:
+        type: object
+        properties:
+          job_name:
+            type: string
+          build_number:
+            type: integer
+          status:
+            type: string
+            enum: [success, failure, unstable, aborted, unknown]
+          trigger_line:
+            type: integer
+            description: "父日志中触发该 Job 的行号。"
+      description: "按触发顺序排列的下游 Job 列表。"
+    failing_chain:
+      type: array
+      items:
+        type: string
+      description: "从根 Job 到失败叶子 Job 的调用链路。"
+    summary:
+      type: string
+      description: "调用链与失败路径的可读摘要。"

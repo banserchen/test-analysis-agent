@@ -1,0 +1,82 @@
+name: report.summary_generator
+version: "1.0.0"
+description: "生成双版本报告：管理层摘要和研发详细报告。"
+author: "测试分析 Agent 团队"
+tags:
+  - 报告
+  - 摘要
+  - 管理层
+  - 研发
+
+input_schema:
+  type: object
+  required:
+    - report
+  properties:
+    report:
+      type: object
+      description: "完整的 AnalysisReport 对象。"
+    language:
+      type: string
+      default: "zh-CN"
+      description: "输出语言（zh-CN 或 en）。"
+
+output_schema:
+  type: object
+  properties:
+    management_summary:
+      type: object
+      properties:
+        title:
+          type: string
+        status_emoji:
+          type: string
+        one_liner:
+          type: string
+          description: "面向管理层的一句话状态概述。"
+        key_metrics:
+          type: object
+          properties:
+            total_tests:
+              type: integer
+            pass_rate:
+              type: string
+            critical_issues:
+              type: integer
+            bug_recommendations:
+              type: integer
+        risk_level:
+          type: string
+          enum: [critical, high, medium, low]
+        action_items:
+          type: array
+          items:
+            type: string
+        body:
+          type: string
+          description: "2-3 段 Markdown 格式的摘要。"
+    developer_report:
+      type: object
+      properties:
+        title:
+          type: string
+        failure_breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+              issues:
+                type: array
+                items:
+                  type: string
+        detailed_findings:
+          type: string
+          description: "Markdown 格式的完整技术分析。"
+        next_steps:
+          type: array
+          items:
+            type: string

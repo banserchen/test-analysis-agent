@@ -1,0 +1,41 @@
+name: env.instability_detector
+version: "1.0.0"
+description: "检测环境不稳定信号——网络抖动、依赖源故障、权限漂移等。"
+author: "测试分析 Agent 团队"
+tags:
+  - 环境
+  - 网络
+  - 依赖源
+  - 稳定性
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "CI 控制台日志文本。"
+
+output_schema:
+  type: object
+  properties:
+    instabilities:
+      type: array
+      items:
+        type: object
+        properties:
+          category:
+            type: string
+            enum: [network, dependency_source, permission, dns, disk, memory, clock_skew, certificate, unknown]
+          evidence:
+            type: string
+          occurrence_count:
+            type: integer
+          severity:
+            type: string
+            enum: [high, medium, low]
+    is_unstable:
+      type: boolean
+    summary:
+      type: string

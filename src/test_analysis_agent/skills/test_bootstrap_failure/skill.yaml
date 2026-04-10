@@ -1,0 +1,35 @@
+name: test.bootstrap_failure
+version: "1.0.0"
+description: "诊断 pytest、pip 或 virtualenv 启动失败，导致测试无法执行的问题。"
+author: "测试分析 Agent 团队"
+tags:
+  - 测试
+  - pytest
+  - pip
+  - 启动失败
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "Jenkins 或 CI 控制台日志文本。"
+
+output_schema:
+  type: object
+  properties:
+    is_bootstrap_failure:
+      type: boolean
+      description: "是否为启动/引导阶段的失败。"
+    bootstrap_phase:
+      type: string
+      enum: [pip_install, venv_creation, pytest_collection, pytest_startup, unknown]
+      description: "失败发生在哪个启动阶段。"
+    error_details:
+      type: string
+      description: "从日志中提取的错误详情。"
+    suggestion:
+      type: string
+      description: "修复建议。"

@@ -1,0 +1,48 @@
+name: jenkins.log_root_cause
+version: "1.0.0"
+description: "定位 Jenkins 构建日志中的错误根因，抽取关键失败片段。"
+author: "测试分析 Agent 团队"
+tags:
+  - jenkins
+  - 日志分析
+  - 根因定位
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "完整的 Jenkins 控制台日志文本。"
+    max_snippet_lines:
+      type: integer
+      default: 30
+      description: "每段抽取片段的最大行数。"
+
+output_schema:
+  type: object
+  properties:
+    root_cause_snippets:
+      type: array
+      items:
+        type: object
+        properties:
+          line_start:
+            type: integer
+            description: "片段起始行号（从1开始）。"
+          line_end:
+            type: integer
+            description: "片段结束行号（从1开始）。"
+          text:
+            type: string
+            description: "抽取的日志片段。"
+          error_type:
+            type: string
+            description: "错误分类（如 compilation、runtime、timeout 等）。"
+          confidence:
+            type: number
+            description: "置信度分数 0-1。"
+    primary_error:
+      type: string
+      description: "一句话总结主要根因。"

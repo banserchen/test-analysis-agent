@@ -1,0 +1,35 @@
+name: test.bootstrap_failure
+version: "1.0.0"
+description: "Diagnose pytest, pip, or virtualenv startup failures that prevent test execution."
+author: "Test Analysis Agent Team"
+tags:
+  - testing
+  - pytest
+  - pip
+  - bootstrap
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "Jenkins or CI console log text."
+
+output_schema:
+  type: object
+  properties:
+    is_bootstrap_failure:
+      type: boolean
+      description: "Whether the failure is a bootstrap/startup issue."
+    bootstrap_phase:
+      type: string
+      enum: [pip_install, venv_creation, pytest_collection, pytest_startup, unknown]
+      description: "Which bootstrap phase failed."
+    error_details:
+      type: string
+      description: "Extracted error detail from the log."
+    suggestion:
+      type: string
+      description: "Recommended fix."

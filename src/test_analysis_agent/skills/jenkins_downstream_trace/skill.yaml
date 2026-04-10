@@ -1,0 +1,48 @@
+name: jenkins.downstream_trace
+version: "1.0.0"
+description: "Trace parent-child Jenkins job call chains and identify which downstream job caused the failure."
+author: "Test Analysis Agent Team"
+tags:
+  - jenkins
+  - downstream
+  - call-chain
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "Jenkins console log of the parent job."
+    stage_results:
+      type: array
+      description: "Parsed pipeline stage results (optional, enriches trace)."
+
+output_schema:
+  type: object
+  properties:
+    call_chain:
+      type: array
+      items:
+        type: object
+        properties:
+          job_name:
+            type: string
+          build_number:
+            type: integer
+          status:
+            type: string
+            enum: [success, failure, unstable, aborted, unknown]
+          trigger_line:
+            type: integer
+            description: "Line number in the parent log where this job was triggered."
+      description: "Ordered list of triggered downstream jobs."
+    failing_chain:
+      type: array
+      items:
+        type: string
+      description: "Chain of job names from root to the failing leaf job."
+    summary:
+      type: string
+      description: "Human-readable summary of the call chain and failure path."

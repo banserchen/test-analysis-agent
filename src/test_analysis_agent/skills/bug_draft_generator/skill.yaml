@@ -1,0 +1,77 @@
+name: bug.draft_generator
+version: "1.0.0"
+description: "Automatically generate bug report drafts from analysis results."
+author: "Test Analysis Agent Team"
+tags:
+  - bug
+  - draft
+  - report
+
+input_schema:
+  type: object
+  required:
+    - issues
+  properties:
+    issues:
+      type: array
+      description: "List of AnalyzedIssue objects from the analysis pipeline."
+      items:
+        type: object
+        properties:
+          title:
+            type: string
+          description:
+            type: string
+          category:
+            type: string
+          severity:
+            type: string
+          root_cause:
+            type: string
+          suggestion:
+            type: string
+          affected_tests:
+            type: array
+            items:
+              type: string
+          log_evidence:
+            type: string
+    job_name:
+      type: string
+      description: "Jenkins job name."
+    build_number:
+      type: integer
+      description: "Jenkins build number."
+
+output_schema:
+  type: object
+  properties:
+    bug_drafts:
+      type: array
+      items:
+        type: object
+        properties:
+          title:
+            type: string
+          severity:
+            type: string
+            enum: [critical, high, medium, low]
+          component:
+            type: string
+          description:
+            type: string
+            description: "Full bug description in Markdown."
+          steps_to_reproduce:
+            type: string
+          expected_behavior:
+            type: string
+          actual_behavior:
+            type: string
+          environment:
+            type: string
+          labels:
+            type: array
+            items:
+              type: string
+    count:
+      type: integer

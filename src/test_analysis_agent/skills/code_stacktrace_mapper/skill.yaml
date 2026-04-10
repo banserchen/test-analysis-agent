@@ -1,0 +1,55 @@
+name: code.stacktrace_mapper
+version: "1.0.0"
+description: "Map stack trace frames to source code file paths and line numbers."
+author: "Test Analysis Agent Team"
+tags:
+  - code
+  - stacktrace
+  - mapping
+
+input_schema:
+  type: object
+  required:
+    - stack_trace
+  properties:
+    stack_trace:
+      type: string
+      description: "Raw stack trace text."
+    language_hint:
+      type: string
+      enum: [python, java, javascript, auto]
+      default: auto
+      description: "Hint for which language parser to use."
+
+output_schema:
+  type: object
+  properties:
+    frames:
+      type: array
+      items:
+        type: object
+        properties:
+          file:
+            type: string
+          line:
+            type: integer
+          function:
+            type: string
+          code_snippet:
+            type: string
+          is_user_code:
+            type: boolean
+            description: "True if frame is from user code (not stdlib/third-party)."
+    language:
+      type: string
+      description: "Detected language."
+    deepest_user_frame:
+      type: object
+      description: "The innermost frame that belongs to user code."
+      properties:
+        file:
+          type: string
+        line:
+          type: integer
+        function:
+          type: string

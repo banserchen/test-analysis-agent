@@ -1,0 +1,48 @@
+name: jenkins.log_root_cause
+version: "1.0.0"
+description: "Locate error root causes in Jenkins build logs and extract key failure snippets."
+author: "Test Analysis Agent Team"
+tags:
+  - jenkins
+  - log-analysis
+  - root-cause
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "Full Jenkins console log text."
+    max_snippet_lines:
+      type: integer
+      default: 30
+      description: "Maximum number of lines per extracted snippet."
+
+output_schema:
+  type: object
+  properties:
+    root_cause_snippets:
+      type: array
+      items:
+        type: object
+        properties:
+          line_start:
+            type: integer
+            description: "1-based start line of the snippet."
+          line_end:
+            type: integer
+            description: "1-based end line of the snippet."
+          text:
+            type: string
+            description: "Extracted log snippet."
+          error_type:
+            type: string
+            description: "Classified error type (e.g., compilation, runtime, timeout)."
+          confidence:
+            type: number
+            description: "Confidence score 0-1."
+    primary_error:
+      type: string
+      description: "Single-sentence summary of the primary root cause."

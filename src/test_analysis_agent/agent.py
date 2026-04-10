@@ -30,6 +30,16 @@ from test_analysis_agent.models.schemas import (
 )
 from test_analysis_agent.parsers.allure_parser import AllureReportParser
 from test_analysis_agent.parsers.jenkins_parser import JenkinsParser, parse_log_text
+from test_analysis_agent.skills import (
+    AllureCaseFailureClassifierSkill,
+    BugDraftGeneratorSkill,
+    CodeStacktraceMapperSkill,
+    EnvInstabilityDetectorSkill,
+    JenkinsDownstreamTraceSkill,
+    JenkinsLogRootCauseSkill,
+    ReportSummaryGeneratorSkill,
+    TestBootstrapFailureSkill,
+)
 from test_analysis_agent.skills.base import SkillRegistry
 from test_analysis_agent.skills.log_pattern_skill import LogPatternAnalyzerSkill
 
@@ -49,6 +59,14 @@ class AnalysisAgent:
         """Register built-in skills and load custom ones."""
         # Built-in skills
         self._skill_registry.register(LogPatternAnalyzerSkill())
+        self._skill_registry.register(JenkinsLogRootCauseSkill())
+        self._skill_registry.register(JenkinsDownstreamTraceSkill())
+        self._skill_registry.register(TestBootstrapFailureSkill())
+        self._skill_registry.register(AllureCaseFailureClassifierSkill())
+        self._skill_registry.register(CodeStacktraceMapperSkill())
+        self._skill_registry.register(EnvInstabilityDetectorSkill())
+        self._skill_registry.register(BugDraftGeneratorSkill())
+        self._skill_registry.register(ReportSummaryGeneratorSkill())
 
         # Load custom skills from directory
         if self._settings.skills_dir:

@@ -1,0 +1,41 @@
+name: env.instability_detector
+version: "1.0.0"
+description: "Detect environment instability signals — network flakiness, dependency source outages, permission drifts, etc."
+author: "Test Analysis Agent Team"
+tags:
+  - environment
+  - network
+  - dependency
+  - instability
+
+input_schema:
+  type: object
+  required:
+    - log_text
+  properties:
+    log_text:
+      type: string
+      description: "CI console log text."
+
+output_schema:
+  type: object
+  properties:
+    instabilities:
+      type: array
+      items:
+        type: object
+        properties:
+          category:
+            type: string
+            enum: [network, dependency_source, permission, dns, disk, memory, clock_skew, certificate, unknown]
+          evidence:
+            type: string
+          occurrence_count:
+            type: integer
+          severity:
+            type: string
+            enum: [high, medium, low]
+    is_unstable:
+      type: boolean
+    summary:
+      type: string

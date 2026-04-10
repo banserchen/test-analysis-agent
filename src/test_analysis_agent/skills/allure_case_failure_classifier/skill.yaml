@@ -1,0 +1,58 @@
+name: allure.case_failure_classifier
+version: "1.0.0"
+description: "Classify and attribute failed Allure test cases by failure type (product bug, test bug, infra issue, etc.)."
+author: "Test Analysis Agent Team"
+tags:
+  - allure
+  - test-failure
+  - classification
+
+input_schema:
+  type: object
+  required:
+    - test_failures
+  properties:
+    test_failures:
+      type: array
+      description: "List of TestCaseFailure objects from Allure parsing."
+      items:
+        type: object
+        properties:
+          test_name:
+            type: string
+          status:
+            type: string
+          error_message:
+            type: string
+          stack_trace:
+            type: string
+          categories:
+            type: array
+            items:
+              type: string
+
+output_schema:
+  type: object
+  properties:
+    classifications:
+      type: array
+      items:
+        type: object
+        properties:
+          test_name:
+            type: string
+          failure_class:
+            type: string
+            enum: [product_bug, test_bug, infrastructure, environment, flaky, unknown]
+          reason:
+            type: string
+          confidence:
+            type: number
+    summary:
+      type: object
+      properties:
+        total:
+          type: integer
+        by_class:
+          type: object
+          description: "Count per failure_class."

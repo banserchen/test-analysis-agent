@@ -1,0 +1,82 @@
+name: report.summary_generator
+version: "1.0.0"
+description: "Generate dual-version reports: a management summary and a detailed developer report."
+author: "Test Analysis Agent Team"
+tags:
+  - report
+  - summary
+  - management
+  - developer
+
+input_schema:
+  type: object
+  required:
+    - report
+  properties:
+    report:
+      type: object
+      description: "Full AnalysisReport object."
+    language:
+      type: string
+      default: "zh-CN"
+      description: "Output language (zh-CN or en)."
+
+output_schema:
+  type: object
+  properties:
+    management_summary:
+      type: object
+      properties:
+        title:
+          type: string
+        status_emoji:
+          type: string
+        one_liner:
+          type: string
+          description: "Single sentence status for stakeholders."
+        key_metrics:
+          type: object
+          properties:
+            total_tests:
+              type: integer
+            pass_rate:
+              type: string
+            critical_issues:
+              type: integer
+            bug_recommendations:
+              type: integer
+        risk_level:
+          type: string
+          enum: [critical, high, medium, low]
+        action_items:
+          type: array
+          items:
+            type: string
+        body:
+          type: string
+          description: "2-3 paragraph summary in Markdown."
+    developer_report:
+      type: object
+      properties:
+        title:
+          type: string
+        failure_breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+              issues:
+                type: array
+                items:
+                  type: string
+        detailed_findings:
+          type: string
+          description: "Full technical analysis in Markdown."
+        next_steps:
+          type: array
+          items:
+            type: string

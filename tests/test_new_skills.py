@@ -282,7 +282,7 @@ class TestCodeStacktraceMapper:
             'Traceback (most recent call last):\n'
             '  File "/app/src/main.py", line 42, in run\n'
             '    result = process(data)\n'
-            '  File "/usr/lib/python3.12/json/__init__.py", line 100, in loads\n'
+            '  File "/usr/lib/python3/json/__init__.py", line 100, in loads\n'
             '    raise JSONDecodeError\n'
         )
         result = skill.execute({"stack_trace": trace})

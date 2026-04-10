@@ -50,7 +50,7 @@ _INSTABILITY_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
     ("certificate", "medium", re.compile(
         r"(?:SSL.*(?:error|fail|verify)|CERT_.*|"
         r"certificate verify failed|unable to get local issuer|"
-        r"self.signed certificate|UNABLE_TO_VERIFY_LEAF_SIGNATURE)",
+        r"self-signed certificate|UNABLE_TO_VERIFY_LEAF_SIGNATURE)",
         re.IGNORECASE,
     )),
 ]

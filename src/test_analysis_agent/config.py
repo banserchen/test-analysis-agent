@@ -10,7 +10,11 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # LLM Configuration
-    llm_api_key: str = Field(default="", description="API key for the LLM provider")
+    llm_provider: str = Field(
+        default="openai",
+        description="LLM provider to use: 'openai' for OpenAI-compatible API, 'copilot' for GitHub Copilot SDK",
+    )
+    llm_api_key: str = Field(default="", description="API key for the LLM provider (or GitHub token for Copilot)")
     llm_base_url: str = Field(default="https://api.openai.com/v1", description="Base URL for the LLM API")
     llm_model: str = Field(default="gpt-4o", description="Model name to use for analysis")
     llm_max_tokens: int = Field(default=4096, description="Maximum tokens for LLM response")

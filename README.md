@@ -7,7 +7,7 @@ AI-powered agent for analyzing CD pipeline failures. Automatically identifies ro
 - **Pipeline Stage Detection** — Automatically classifies failures into preparation, deployment, or testing stages
 - **Jenkins Integration** — Fetches and parses build logs directly from Jenkins via API
 - **Allure Report Analysis** — Parses Allure JSON reports to extract and analyze test failures
-- **LLM-Powered Analysis** — Uses OpenAI-compatible LLMs to identify root causes and suggest fixes
+- **LLM-Powered Analysis** — Pluggable LLM backend supporting OpenAI-compatible APIs and GitHub Copilot SDK
 - **Extensible Skill System** — Add custom analysis skills as Python plugins for domain-specific patterns
 - **Multiple Output Formats** — Reports in Markdown, JSON, and HTML
 - **Dual Interface** — CLI for Jenkins pipeline integration + HTTP API for service deployment
@@ -28,7 +28,9 @@ AI-powered agent for analyzing CD pipeline failures. Automatically identifies ro
 │               │                           │             │
 │         ┌─────▼───────────────────────────▼─────┐       │
 │         │          LLM Analyzer                  │       │
-│         │   (OpenAI-compatible API)              │       │
+│         │  ┌──────────────┬──────────────────┐   │       │
+│         │  │ OpenAI API   │ Copilot SDK      │   │       │
+│         │  └──────────────┴──────────────────┘   │       │
 │         └─────────────┬──────────────────────────┘       │
 │                       │                                  │
 │              ┌────────▼────────┐                         │
@@ -65,14 +67,44 @@ Key environment variables (all prefixed with `TAA_`):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `TAA_LLM_API_KEY` | API key for OpenAI or compatible LLM | (required) |
-| `TAA_LLM_BASE_URL` | LLM API base URL | `https://api.openai.com/v1` |
+| `TAA_LLM_PROVIDER` | LLM provider: `openai` or `copilot` | `openai` |
+| `TAA_LLM_API_KEY` | API key for OpenAI or GitHub token for Copilot | (required) |
+| `TAA_LLM_BASE_URL` | LLM API base URL (OpenAI provider only) | `https://api.openai.com/v1` |
 | `TAA_LLM_MODEL` | Model name | `gpt-4o` |
 | `TAA_JENKINS_URL` | Jenkins server URL | (required for Jenkins analysis) |
 | `TAA_JENKINS_USERNAME` | Jenkins username | |
 | `TAA_JENKINS_PASSWORD` | Jenkins API token | |
 | `TAA_REPORT_LANGUAGE` | Report language (`zh-CN` or `en`) | `zh-CN` |
 | `TAA_SKILLS_DIR` | Custom skills plugin directory | |
+
+### LLM Provider Options
+
+The agent supports two LLM backends, configured via `TAA_LLM_PROVIDER`:
+
+#### OpenAI-compatible API (default)
+
+Works with OpenAI, Azure OpenAI, and any OpenAI-compatible API endpoint:
+
+```bash
+TAA_LLM_PROVIDER=openai
+TAA_LLM_API_KEY=sk-your-openai-key
+TAA_LLM_BASE_URL=https://api.openai.com/v1  # or Azure/self-hosted URL
+TAA_LLM_MODEL=gpt-4o
+```
+
+#### GitHub Copilot SDK
+
+Uses the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) to run analysis through Copilot's LLM capabilities. Requires the Copilot CLI and a GitHub Copilot subscription (or BYOK configuration).
+
+```bash
+# Install the optional Copilot dependency
+pip install -e ".[copilot]"
+
+# Configure the agent
+TAA_LLM_PROVIDER=copilot
+TAA_LLM_API_KEY=ghp_your-github-token  # optional if Copilot CLI is already authenticated
+TAA_LLM_MODEL=gpt-4o
+```
 
 ### CLI Usage
 

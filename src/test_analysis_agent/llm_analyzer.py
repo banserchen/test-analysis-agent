@@ -1,7 +1,7 @@
 """LLM-based analysis engine.
 
-Uses an LLM (OpenAI-compatible API) to analyze pipeline failures,
-test case errors, and generate reports.
+Uses an LLM (via pluggable backends: OpenAI-compatible API or GitHub Copilot SDK)
+to analyze pipeline failures, test case errors, and generate reports.
 """
 
 from __future__ import annotations
@@ -9,9 +9,8 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from openai import OpenAI
-
 from test_analysis_agent.config import Settings
+from test_analysis_agent.llm_client import LLMClient, create_llm_client
 from test_analysis_agent.models.schemas import (
     AnalyzedIssue,
     FailureCategory,
@@ -141,11 +140,8 @@ Respond in JSON:
 class LLMAnalyzer:
     """LLM-powered failure analysis engine."""
 
-    def __init__(self, settings: Settings):
-        self._client = OpenAI(
-            api_key=settings.llm_api_key or "not-set",
-            base_url=settings.llm_base_url,
-        )
+    def __init__(self, settings: Settings, client: LLMClient | None = None):
+        self._client = client or create_llm_client(settings)
         self._model = settings.llm_model
         self._max_tokens = settings.llm_max_tokens
         self._temperature = settings.llm_temperature
@@ -316,20 +312,13 @@ class LLMAnalyzer:
 
     def _call_llm(self, user_prompt: str) -> Optional[str]:
         """Call the LLM API with error handling."""
-        try:
-            response = self._client.chat.completions.create(
-                model=self._model,
-                messages=[
-                    {"role": "system", "content": _SYSTEM_PROMPT.format(language=self._language)},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=self._max_tokens,
-                temperature=self._temperature,
-            )
-            return response.choices[0].message.content
-        except Exception as exc:
-            logger.error("LLM API call failed: %s", exc)
-            return None
+        return self._client.chat_completion(
+            system_prompt=_SYSTEM_PROMPT.format(language=self._language),
+            user_prompt=user_prompt,
+            model=self._model,
+            max_tokens=self._max_tokens,
+            temperature=self._temperature,
+        )
 
 
 def _truncate(text: Optional[str], max_chars: int) -> str:

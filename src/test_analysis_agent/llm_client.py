@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Coroutine
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -133,7 +134,7 @@ class CopilotClient(LLMClient):
         from copilot import SubprocessConfig
         from copilot.session import PermissionHandler, SessionEventType
 
-        config = SubprocessConfig(github_token=self._github_token) if self._github_token else None
+        config = SubprocessConfig(github_token=self._github_token)
 
         async with _CopilotClient(config=config) as client:
             system_message = {"mode": "replace", "content": system_prompt}
@@ -195,7 +196,7 @@ def create_llm_client(settings: Settings) -> LLMClient:
         )
 
 
-def _run_async(coro: object) -> str | None:
+def _run_async(coro: Coroutine[None, None, str | None]) -> str | None:
     """Run an async coroutine from synchronous code.
 
     Handles the case where an event loop may already be running

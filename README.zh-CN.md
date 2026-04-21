@@ -114,7 +114,7 @@ pip install -e ".[copilot]"
 # 配置 Agent
 TAA_LLM_PROVIDER=copilot
 TAA_LLM_API_KEY=ghp_你的-github-token   # 如果 Copilot CLI 已登录，可不填
-TAA_LLM_MODEL=gpt-4o
+TAA_LLM_MODEL=gpt-5.4
 ```
 
 ---

@@ -22,6 +22,16 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _deny_permission_requests(request: object, invocation: dict[str, str]) -> object:
+    """Deny all Copilot permission requests across SDK versions."""
+
+    del request, invocation
+
+    from copilot.session import PermissionRequestResult
+
+    return PermissionRequestResult(kind="denied-by-rules")
+
+
 class LLMClient(ABC):
     """Abstract base class for LLM clients."""
 
@@ -132,7 +142,7 @@ class CopilotClient(LLMClient):
     ) -> str | None:
         from copilot import CopilotClient as _CopilotClient
         from copilot import SubprocessConfig
-        from copilot.session import PermissionHandler, SessionEventType
+        from copilot.session import SessionEventType
 
         config = SubprocessConfig(github_token=self._github_token)
 
@@ -140,7 +150,7 @@ class CopilotClient(LLMClient):
             system_message = {"mode": "replace", "content": system_prompt}
 
             async with await client.create_session(
-                on_permission_request=PermissionHandler.deny_all,
+                on_permission_request=_deny_permission_requests,
                 model=model,
                 system_message=system_message,
             ) as session:

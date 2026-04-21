@@ -1,5 +1,7 @@
 """Tests for the LLM client abstraction layer."""
 
+import asyncio
+import importlib.util
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -108,6 +110,45 @@ class TestCopilotClient:
     def test_none_token(self):
         client = CopilotClient(github_token=None)
         assert client._github_token is None
+
+    @pytest.mark.integration
+    def test_chat_completion_with_configured_copilot(self):
+        settings = Settings()
+
+        if settings.llm_provider != "copilot":
+            pytest.skip("Copilot provider is not configured")
+
+        if importlib.util.find_spec("copilot") is None:
+            pytest.skip("github-copilot-sdk is not installed")
+
+        from copilot import CopilotClient as SDKCopilotClient
+        from copilot import SubprocessConfig
+
+        async def list_model_ids() -> list[str]:
+            config = SubprocessConfig(github_token=settings.llm_api_key or None)
+            async with SDKCopilotClient(config=config) as sdk_client:
+                return [model.id for model in await sdk_client.list_models()]
+
+        available_models = asyncio.run(list_model_ids())
+
+        assert available_models, "Copilot authentication succeeded but no models were returned"
+        assert settings.llm_model in available_models, (
+            f"Configured model '{settings.llm_model}' is not available. "
+            f"Available models: {', '.join(available_models)}"
+        )
+
+        client = CopilotClient(github_token=settings.llm_api_key or None)
+
+        response = client.chat_completion(
+            system_prompt="Reply with exactly: COPILOT_OK",
+            user_prompt="Return the health check token only.",
+            model=settings.llm_model,
+            max_tokens=32,
+            temperature=0,
+        )
+
+        assert response is not None
+        assert "COPILOT_OK" in response
 
 
 class TestCreateLLMClient:

@@ -1,5 +1,7 @@
 # Test Analysis Agent
 
+> 📘 中文使用文档 → [`README.zh-CN.md`](README.zh-CN.md) · 🤖 Agent-oriented technical doc → [`ARCHITECTURE.md`](ARCHITECTURE.md)
+
 AI-powered agent for analyzing CD pipeline failures. Automatically identifies root causes from Jenkins build logs and Allure test reports, then generates structured analysis reports with bug filing recommendations.
 
 ## Features

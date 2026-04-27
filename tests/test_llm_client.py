@@ -34,7 +34,8 @@ class TestOpenAIClient:
             model="gpt-4o",
         )
 
-        assert result == "test response"
+        assert result is not None
+        assert result.text == "test response"
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-4o",
             messages=[
@@ -64,7 +65,8 @@ class TestOpenAIClient:
             temperature=0.8,
         )
 
-        assert result == "response"
+        assert result is not None
+        assert result.text == "response"
         mock_client.chat.completions.create.assert_called_once_with(
             model="custom-model",
             messages=[
@@ -88,7 +90,8 @@ class TestOpenAIClient:
             model="gpt-4o",
         )
 
-        assert result is None
+        assert result is not None
+        assert result.text is None
 
     @patch("openai.OpenAI")
     def test_empty_api_key_defaults_to_not_set(self, mock_openai_cls):
@@ -148,7 +151,7 @@ class TestCopilotClient:
         )
 
         assert response is not None
-        assert "COPILOT_OK" in response
+        assert "COPILOT_OK" in (response.text or "")
 
 
 class TestCreateLLMClient:

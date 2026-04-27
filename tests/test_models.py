@@ -104,7 +104,7 @@ class TestAnalysisReport:
                 AnalyzedIssue(
                     title="Test issue",
                     description="Something failed",
-                    category=FailureCategory.CODE_BUG,
+                    category=FailureCategory.FUNCTION_BUG,
                     severity=Severity.HIGH,
                     stage=PipelineStage.TESTING,
                 ),
@@ -112,4 +112,4 @@ class TestAnalysisReport:
         )
         json_str = report.model_dump_json()
         assert "test-job" in json_str
-        assert "code_bug" in json_str
+        assert "function_bug" in json_str

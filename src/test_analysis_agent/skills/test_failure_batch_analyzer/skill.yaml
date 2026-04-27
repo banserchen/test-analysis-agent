@@ -1,0 +1,59 @@
+name: test_failure_batch_analyzer
+version: "1.0.0"
+description: "对测试失败用例进行批量分析，按根因分组生成结构化的 AnalyzedIssue 列表。"
+author: "测试分析 Agent 团队"
+tags:
+  - allure
+  - 批量分析
+  - 问题归组
+  - LLM
+
+input_schema:
+  type: object
+  required:
+    - test_failures
+  properties:
+    test_failures:
+      type: array
+      description: "TestCaseFailure 对象列表。"
+      items:
+        type: object
+        properties:
+          test_name:
+            type: string
+          status:
+            type: string
+          error_message:
+            type: string
+          stack_trace:
+            type: string
+
+output_schema:
+  type: object
+  properties:
+    analyzed_issues:
+      type: array
+      description: "按根因分组的 AnalyzedIssue 对象列表，直接加入报告的 issues 字段。"
+      items:
+        type: object
+        properties:
+          title:
+            type: string
+          description:
+            type: string
+          category:
+            type: string
+          severity:
+            type: string
+          affected_tests:
+            type: array
+            items:
+              type: string
+          root_cause:
+            type: string
+          suggestion:
+            type: string
+          should_file_bug:
+            type: boolean
+          bug_summary:
+            type: string

@@ -48,7 +48,7 @@ def _make_sample_report() -> AnalysisReport:
                 suite_name="auth_suite",
                 status="failed",
                 error_message="AssertionError: Expected 200, got 500",
-                failure_category=FailureCategory.CODE_BUG,
+                failure_category=FailureCategory.FUNCTION_BUG,
                 ai_analysis="The login endpoint is returning 500, likely a server-side bug.",
             ),
         ],
@@ -56,7 +56,7 @@ def _make_sample_report() -> AnalysisReport:
             AnalyzedIssue(
                 title="Login API returns 500",
                 description="The login endpoint returns HTTP 500 instead of 200",
-                category=FailureCategory.CODE_BUG,
+                category=FailureCategory.FUNCTION_BUG,
                 severity=Severity.HIGH,
                 stage=PipelineStage.TESTING,
                 affected_tests=["test_login_with_valid_credentials"],
@@ -122,7 +122,7 @@ class TestJsonReport:
         import json
 
         parsed = json.loads(generate_json_report(report))
-        assert "failure_stage" in parsed
+        assert "failure_stage_name" in parsed
         assert "test_failures" in parsed
         assert "bug_recommendations" in parsed
 

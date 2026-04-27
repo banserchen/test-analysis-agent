@@ -214,7 +214,7 @@ class TestAllureCaseFailureClassifier:
                 "categories": [],
             }]
         })
-        assert result["classifications"][0]["failure_class"] == "product_bug"
+        assert result["classifications"][0]["failure_category"] == "function_bug"
 
     def test_classify_infrastructure(self):
         skill = AllureCaseFailureClassifierSkill()
@@ -226,7 +226,7 @@ class TestAllureCaseFailureClassifier:
                 "categories": [],
             }]
         })
-        assert result["classifications"][0]["failure_class"] == "infrastructure"
+        assert result["classifications"][0]["failure_category"] == "test_infrastructure_error"
 
     def test_classify_from_allure_category(self):
         skill = AllureCaseFailureClassifierSkill()
@@ -238,7 +238,7 @@ class TestAllureCaseFailureClassifier:
                 "categories": ["Flaky tests"],
             }]
         })
-        assert result["classifications"][0]["failure_class"] == "flaky"
+        assert result["classifications"][0]["failure_category"] == "test_case_failure"
 
     def test_summary_counts(self):
         skill = AllureCaseFailureClassifierSkill()
@@ -253,9 +253,9 @@ class TestAllureCaseFailureClassifier:
     def test_postprocess_valid(self):
         data = {
             "classifications": [
-                {"test_name": "t1", "failure_class": "product_bug", "reason": "matched", "confidence": 0.8}
+                {"test_name": "t1", "failure_category": "function_bug", "reason": "matched", "confidence": 0.8}
             ],
-            "summary": {"total": 1, "by_class": {"product_bug": 1}},
+            "summary": {"total": 1, "by_category": {"function_bug": 1}},
         }
         is_valid, errors = validate_classifier(data)
         assert is_valid, errors
@@ -513,7 +513,7 @@ class TestReportSummaryGenerator:
                 AnalyzedIssue(
                     title="API regression",
                     description="API returns 500",
-                    category=FailureCategory.CODE_BUG,
+                    category=FailureCategory.FUNCTION_BUG,
                     severity=Severity.CRITICAL,
                     stage=PipelineStage.TESTING,
                     root_cause="Null pointer",

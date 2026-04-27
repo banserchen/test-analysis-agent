@@ -10,11 +10,13 @@ Allure 测试报告，定位根因，并生成结构化的分析报告与提 Bug
 
 ## ✨ 功能特性
 
-- **流水线阶段识别** — 自动把失败归类到「准备」「部署」或「测试」阶段
-- **Jenkins 集成** — 通过 Jenkins API 直接拉取并解析构建日志
+- **流水线阶段识别** — 通过 Jenkins Workflow API（wfapi）获取权威的 stage 列表，使用真实的 stage 名称定位失败；同时抓取每个 stage 的步骤日志，为根因分析提供精准上下文
+- **Jenkins 集成** — 通过 Jenkins API 直接拉取构建日志、wfapi stage 数据以及 Jenkinsfile 内容
 - **Allure 报告分析** — 解析 Allure JSON 报告，提取并分析失败用例
 - **LLM 驱动的根因分析** — 可插拔 LLM 后端，支持任意 OpenAI 兼容接口以及 GitHub Copilot SDK
 - **可扩展的技能系统** — 以 Python 插件形式添加自定义分析技能，适配业务领域模式
+- **环境基础设施检查** — 当检测到网络/连接错误时，可选通过 SSH 登录测试环境主机，检查容器与服务健康状态
+- **飞书云文档** — 将分析结果生成结构化的飞书云文档，包含模块版本信息、测试用例统计、问题分析（表格）及 Bug 上报建议（表格）
 - **多种报告格式** — 支持 Markdown、JSON、HTML
 - **双形态接入** — 既是 CLI（适合在 Jenkins 流水线里调用），也是 HTTP API（适合部署成服务）
 - **多语言报告** — 支持中文（zh-CN）和英文（en）
@@ -86,6 +88,10 @@ cp .env.example .env
 | `TAA_JENKINS_PASSWORD` | Jenkins API Token | |
 | `TAA_REPORT_LANGUAGE` | 报告语言（`zh-CN` 或 `en`） | `zh-CN` |
 | `TAA_SKILLS_DIR` | 自定义技能插件目录 | |
+| `TAA_ENVIRONMENTS_API_URL` | 测试环境 API 的基础 URL；启用后支持通过 SSH 检查环境基础设施 | |
+| `TAA_FEISHU_APP_ID` | 飞书应用的 App ID，用于创建云文档 | |
+| `TAA_FEISHU_APP_SECRET` | 飞书应用的 App Secret | |
+| `TAA_FEISHU_FOLDER_TOKEN` | 飞书文档保存的目标文件夹 Token | |
 
 ### LLM 后端选项
 
@@ -151,7 +157,7 @@ test-analysis-agent analyze-log /path/to/console-output.log \
 ### 启动 API 服务
 
 ```bash
-test-analysis-agent serve --port 8080
+test-analysis-agent serve --port 9090
 ```
 
 ### 查看已注册的技能
@@ -173,7 +179,7 @@ test-analysis-agent serve
 ### 分析一次 Jenkins 流水线
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/analyze \
+curl -X POST http://localhost:9090/api/v1/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "job_name": "my-project/deploy-pipeline",
@@ -185,7 +191,7 @@ curl -X POST http://localhost:8080/api/v1/analyze \
 ### 分析原始日志文本
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/analyze/log \
+curl -X POST http://localhost:9090/api/v1/analyze/log \
   -H "Content-Type: application/json" \
   -d '{
     "log_text": "... jenkins 控制台日志 ...",
@@ -198,19 +204,35 @@ curl -X POST http://localhost:8080/api/v1/analyze/log \
 
 ```bash
 # Markdown
-curl -X POST http://localhost:8080/api/v1/analyze/report/markdown \
+curl -X POST http://localhost:9090/api/v1/analyze/report/markdown \
   -H "Content-Type: application/json" \
   -d '{"job_name": "my-project", "build_number": 42}'
 
 # HTML
-curl -X POST http://localhost:8080/api/v1/analyze/report/html \
+curl -X POST http://localhost:9090/api/v1/analyze/report/html \
   -H "Content-Type: application/json" \
   -d '{"job_name": "my-project", "build_number": 42}'
 ```
 
 ### 在线 API 文档
 
-服务启动后，可在 `http://localhost:8080/docs` 查看 Swagger 交互式 API 文档。
+服务启动后，可在 `http://localhost:9090/docs` 查看 Swagger 交互式 API 文档。
+
+### 创建飞书云文档
+
+```bash
+# 将分析结果 JSON 发送到飞书接口，创建云文档
+curl -X POST http://localhost:9090/api/v1/report/feishu \
+  -H "Content-Type: application/json" \
+  -d '{ <AnalysisReport JSON> }'
+# 返回：{"document_url": "https://your-tenant.feishu.cn/docx/..."}
+
+# 列出所有历史飞书报告
+curl http://localhost:9090/api/v1/reports/feishu
+# 返回：{"documents": [...], "count": N}
+```
+
+飞书文档内容包含：模块版本信息、测试用例统计、问题分析（表格）、Bug 上报建议（表格）。飞书凭证通过 `TAA_FEISHU_APP_ID` 和 `TAA_FEISHU_APP_SECRET` 配置。
 
 ---
 
@@ -236,7 +258,7 @@ pipeline {
 
                 // 方式 2：HTTP API 集成
                 def response = httpRequest(
-                    url: 'http://analysis-agent:8080/api/v1/analyze',
+                    url: 'http://analysis-agent:9090/api/v1/analyze',
                     httpMode: 'POST',
                     contentType: 'APPLICATION_JSON',
                     requestBody: """{
@@ -262,7 +284,7 @@ docker build -t test-analysis-agent .
 
 # 以 API 服务方式运行
 docker run -d --name analysis-agent \
-  -p 8080:8080 \
+  -p 9090:9090 \
   -e TAA_LLM_API_KEY=你的-key \
   -e TAA_JENKINS_URL=https://jenkins.example.com \
   -e TAA_JENKINS_USERNAME=user \
@@ -274,21 +296,26 @@ docker run -d --name analysis-agent \
 
 ## 🔍 分析流程
 
-Agent 会根据失败阶段走不同的分析路径：
+Agent 会按以下路径进行分析：
 
-1. **准备 / 部署阶段失败**
-   - 解析 Jenkins 控制台日志，定位出错的 stage
-   - 如果该 stage 触发了下游 Job，会把下游 Job 的日志也拉下来一并分析
-   - 把错误上下文交给 LLM 做根因分析
+1. **Stage 定位**
+   - 调用 Jenkins Workflow API（`wfapi/describe`）获取权威的 stage 列表（真实名称 + 状态）
+   - 通过 replay 接口拉取 Jenkinsfile，了解各 stage 的脚本内容
+   - 找到第一个真正失败的 stage（排除因上游失败而被跳过的 stage）
+   - 输出结果中只包含失败/跳过的 stage，通过的 stage 会被过滤掉
 
-2. **测试阶段失败**
-   - **测试启动失败**（没有用例跑起来）：只分析 Jenkins 日志中的启动期错误
-   - **测试执行失败**（用例跑起来了）：解析 Allure 报告，逐个用例交给 LLM
-     分析（可选带上测试源码），再按根因聚合归并
+2. **非测试阶段失败**
+   - 通过 wfapi 节点日志接口抓取该 stage 内失败步骤的详细日志
+   - 如果该 stage 触发了下游 Job，会递归拉取并分析下游 Job 的日志
+   - 将 stage 日志 + 脚本上下文交给 LLM 进行根因分析
 
-3. **报告生成**
-   - 把所有结论汇总成结构化报告
-   - 针对值得提单的问题生成「Bug 提单建议」
+3. **测试阶段失败**
+   - **测试未启动**（没有用例跑起来）：分析 Jenkins 日志中的启动期错误
+   - **测试已执行**：自动识别 `{build_url}/allure` 处的 Allure 报告，逐个解析失败用例，交给 LLM 分析，再按根因聚合归并
+
+4. **报告生成**
+   - 以真实的 stage 名称汇总所有结论，生成结构化报告
+   - 针对值得提单的问题生成包含 `summary`（标题）和 `detail_description`（详情）的 Bug 建议
 
 ---
 

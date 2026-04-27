@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  test-analysis-agent:
+    image: ${PROJECT_NAME:-test-analysis-agent}:${IMAGE_TAG:-latest}
+    container_name: ${PROJECT_NAME:-test-analysis-agent}_${BUILD_NUMBER:-dev}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${HOST_PORT:-9090}:9090"
+    environment:
+      # LLM
+      - TAA_LLM_PROVIDER=${TAA_LLM_PROVIDER:-openai}
+      - TAA_LLM_API_KEY=${TAA_LLM_API_KEY:-}
+      - TAA_LLM_BASE_URL=${TAA_LLM_BASE_URL:-https://api.openai.com/v1}
+      - TAA_LLM_MODEL=${TAA_LLM_MODEL:-gpt-4o}
+      - TAA_LLM_MAX_TOKENS=${TAA_LLM_MAX_TOKENS:-4096}
+      - TAA_LLM_TEMPERATURE=${TAA_LLM_TEMPERATURE:-0.2}
+      # Jenkins
+      - TAA_JENKINS_URL=${TAA_JENKINS_URL:-}
+      - TAA_JENKINS_USERNAME=${TAA_JENKINS_USERNAME:-}
+      - TAA_JENKINS_PASSWORD=${TAA_JENKINS_PASSWORD:-}
+      # Report
+      - TAA_REPORT_LANGUAGE=${TAA_REPORT_LANGUAGE:-zh-CN}
+      - TAA_MAX_LOG_LINES=${TAA_MAX_LOG_LINES:-5000}
+      # Infrastructure inspector
+      - TAA_ENVIRONMENTS_API_URL=${TAA_ENVIRONMENTS_API_URL:-}
+      # Feishu
+      - TAA_FEISHU_APP_ID=${TAA_FEISHU_APP_ID:-}
+      - TAA_FEISHU_APP_SECRET=${TAA_FEISHU_APP_SECRET:-}
+      - TAA_FEISHU_FOLDER_TOKEN=${TAA_FEISHU_FOLDER_TOKEN:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

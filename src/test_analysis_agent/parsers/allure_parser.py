@@ -71,12 +71,34 @@ class AllureReportParser:
         suites = self._fetch_json(f"{base_url}/data/suites.json")
         categories = self._fetch_json(f"{base_url}/widgets/categories.json")
 
+        # Enumerate failing test UIDs from the suites tree and fetch their details.
+        test_case_details: list[dict] = []
+        if suites:
+            failed_uids: list[str] = []
+            self._collect_failed_uids(suites.get("children", []), failed_uids)
+            for uid in failed_uids:
+                detail = self._fetch_json(f"{base_url}/data/test-cases/{uid}.json")
+                if detail:
+                    test_case_details.append(detail)
+
         return AllureReportData(
             summary=summary or {},
             suites=suites or {},
             categories=categories or [],
-            test_case_details=[],  # Cannot enumerate remote test case files
+            test_case_details=test_case_details,
         )
+
+    @staticmethod
+    def _collect_failed_uids(nodes: list[dict], uids: list[str]) -> None:
+        """Recursively collect UIDs of failed/broken test nodes from a suites tree."""
+        for node in nodes:
+            status = node.get("status", "").lower()
+            uid = node.get("uid")
+            if status in ("failed", "broken") and uid:
+                uids.append(uid)
+            children = node.get("children", [])
+            if children:
+                AllureReportParser._collect_failed_uids(children, uids)
 
     @staticmethod
     def _load_json_file(path: Path) -> Any:
@@ -189,8 +211,12 @@ class AllureReportData:
 
 
 def _detail_to_failure(tc: dict[str, Any]) -> TestCaseFailure:
-    """Convert an Allure test case detail to a TestCaseFailure."""
-    status_details = tc.get("statusDetails", {}) or {}
+    """Convert an Allure test case detail to a TestCaseFailure.
+
+    Handles two field layouts:
+    - Local allure-results: ``statusDetails: {message: ..., trace: ...}``
+    - Jenkins allure plugin API: top-level ``statusMessage`` and ``statusTrace``
+    """
     labels = tc.get("labels", []) or []
 
     suite_name = ""
@@ -206,13 +232,28 @@ def _detail_to_failure(tc: dict[str, Any]) -> TestCaseFailure:
         if label.get("name") == "tag":
             categories.append(label.get("value", ""))
 
+    # Support both statusDetails dict and flat statusMessage/statusTrace fields.
+    status_details = tc.get("statusDetails") or {}
+    if isinstance(status_details, dict):
+        error_message = status_details.get("message") or tc.get("statusMessage")
+        stack_trace = status_details.get("trace") or tc.get("statusTrace")
+    else:
+        error_message = tc.get("statusMessage")
+        stack_trace = tc.get("statusTrace")
+
+    # Also try testStage for nested message/trace (Jenkins allure plugin layout).
+    if not error_message or not stack_trace:
+        test_stage = tc.get("testStage") or {}
+        error_message = error_message or test_stage.get("statusMessage")
+        stack_trace = stack_trace or test_stage.get("statusTrace")
+
     return TestCaseFailure(
         test_name=tc.get("fullName") or tc.get("name", "unknown"),
         test_class=test_class or None,
         suite_name=suite_name or None,
         status=tc.get("status", "unknown").lower(),
-        error_message=status_details.get("message"),
-        stack_trace=status_details.get("trace"),
+        error_message=error_message,
+        stack_trace=stack_trace,
         duration_ms=tc.get("time", {}).get("duration"),
         categories=categories,
     )
@@ -233,4 +274,8 @@ def _get_status_trace(node: dict[str, Any]) -> Optional[str]:
     details = node.get("statusDetails")
     if isinstance(details, dict):
         return details.get("trace")
+    # Jenkins allure plugin uses top-level statusTrace
+    trace = node.get("statusTrace")
+    if isinstance(trace, str):
+        return trace
     return None

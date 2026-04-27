@@ -8,7 +8,9 @@ build/
 *.egg
 .env
 .venv/
+.venv-linux/
 venv/
+venv-linux/
 .pytest_cache/
 .ruff_cache/
 *.so

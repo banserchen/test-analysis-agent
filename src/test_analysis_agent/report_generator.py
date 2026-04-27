@@ -102,7 +102,14 @@ _MD_TEMPLATE = """# Pipeline Failure Analysis Report
 ## Bug Filing Recommendations
 
 {% for rec in report.bug_recommendations %}
-{{ loop.index }}. {{ rec }}
+### {{ loop.index }}. {{ rec.summary }}
+{% if rec.severity %}- **Severity:** {{ rec.severity.value }}{% endif %}
+{% if rec.category %}- **Category:** {{ rec.category.value }}{% endif %}
+{% if rec.affected_stage %}- **Affected Stage:** {{ rec.affected_stage.value }}{% endif %}
+{% if rec.affected_jobs %}- **Affected Jobs:** {{ rec.affected_jobs | join(', ') }}{% endif %}
+
+{{ rec.detail_description }}
+
 {% endfor %}
 {% endif %}
 

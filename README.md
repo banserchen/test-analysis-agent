@@ -6,11 +6,13 @@ AI-powered agent for analyzing CD pipeline failures. Automatically identifies ro
 
 ## Features
 
-- **Pipeline Stage Detection** — Automatically classifies failures into preparation, deployment, or testing stages
-- **Jenkins Integration** — Fetches and parses build logs directly from Jenkins via API
+- **Pipeline Stage Detection** — Uses Jenkins Workflow API (wfapi) to identify the exact failing stage by its real name; also fetches per-stage logs for precise root cause context
+- **Jenkins Integration** — Fetches build logs, stage data (wfapi), and Jenkinsfile content directly from Jenkins
 - **Allure Report Analysis** — Parses Allure JSON reports to extract and analyze test failures
 - **LLM-Powered Analysis** — Pluggable LLM backend supporting OpenAI-compatible APIs and GitHub Copilot SDK
 - **Extensible Skill System** — Add custom analysis skills as Python plugins for domain-specific patterns
+- **Infrastructure Inspection** — Optionally SSH into test environment hosts to check container/service health when network errors are detected
+- **Feishu Cloud Documents** — Creates structured, human-readable Feishu cloud documents from analysis results, including module versions, test statistics, issues, and bug recommendations
 - **Multiple Output Formats** — Reports in Markdown, JSON, and HTML
 - **Dual Interface** — CLI for Jenkins pipeline integration + HTTP API for service deployment
 - **Multi-Language Reports** — Supports Chinese (zh-CN) and English report generation
@@ -78,6 +80,10 @@ Key environment variables (all prefixed with `TAA_`):
 | `TAA_JENKINS_PASSWORD` | Jenkins API token | |
 | `TAA_REPORT_LANGUAGE` | Report language (`zh-CN` or `en`) | `zh-CN` |
 | `TAA_SKILLS_DIR` | Custom skills plugin directory | |
+| `TAA_ENVIRONMENTS_API_URL` | Base URL of the test environments API; enables infrastructure inspection via SSH | |
+| `TAA_FEISHU_APP_ID` | Feishu application App ID for cloud document creation | |
+| `TAA_FEISHU_APP_SECRET` | Feishu application App Secret | |
+| `TAA_FEISHU_FOLDER_TOKEN` | Feishu folder token where reports are saved | |
 
 ### LLM Provider Options
 
@@ -140,7 +146,7 @@ test-analysis-agent analyze-log /path/to/console-output.log \
 #### Start the API server
 
 ```bash
-test-analysis-agent serve --port 8080
+test-analysis-agent serve --port 9090
 ```
 
 #### List registered skills
@@ -160,7 +166,7 @@ test-analysis-agent serve
 #### Analyze a Jenkins pipeline
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/analyze \
+curl -X POST http://localhost:9090/api/v1/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "job_name": "my-project/deploy-pipeline",
@@ -172,7 +178,7 @@ curl -X POST http://localhost:8080/api/v1/analyze \
 #### Analyze raw log text
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/analyze/log \
+curl -X POST http://localhost:9090/api/v1/analyze/log \
   -H "Content-Type: application/json" \
   -d '{
     "log_text": "... jenkins console output ...",
@@ -185,19 +191,35 @@ curl -X POST http://localhost:8080/api/v1/analyze/log \
 
 ```bash
 # Markdown report
-curl -X POST http://localhost:8080/api/v1/analyze/report/markdown \
+curl -X POST http://localhost:9090/api/v1/analyze/report/markdown \
   -H "Content-Type: application/json" \
   -d '{"job_name": "my-project", "build_number": 42}'
 
 # HTML report
-curl -X POST http://localhost:8080/api/v1/analyze/report/html \
+curl -X POST http://localhost:9090/api/v1/analyze/report/html \
   -H "Content-Type: application/json" \
   -d '{"job_name": "my-project", "build_number": 42}'
 ```
 
 #### API Documentation
 
-Interactive API docs are available at `http://localhost:8080/docs` when the server is running.
+Interactive API docs are available at `http://localhost:9090/docs` when the server is running.
+
+#### Create a Feishu cloud document
+
+```bash
+# POST the analysis result JSON to create a Feishu document
+curl -X POST http://localhost:9090/api/v1/report/feishu \
+  -H "Content-Type: application/json" \
+  -d '{ <AnalysisReport JSON> }'
+# Returns: {"document_url": "https://your-tenant.feishu.cn/docx/..."}
+
+# List all previously created Feishu reports
+curl http://localhost:9090/api/v1/reports/feishu
+# Returns: {"documents": [...], "count": N}
+```
+
+Feishu documents include: module version information, test case statistics, analyzed issues (table), and bug recommendations (table). Configure Feishu credentials via `TAA_FEISHU_APP_ID` and `TAA_FEISHU_APP_SECRET`.
 
 ### Jenkins Pipeline Integration
 
@@ -221,7 +243,7 @@ pipeline {
 
                 // Option 2: API integration
                 def response = httpRequest(
-                    url: 'http://analysis-agent:8080/api/v1/analyze',
+                    url: 'http://analysis-agent:9090/api/v1/analyze',
                     httpMode: 'POST',
                     contentType: 'APPLICATION_JSON',
                     requestBody: """{
@@ -245,7 +267,7 @@ docker build -t test-analysis-agent .
 
 # Run as API service
 docker run -d --name analysis-agent \
-  -p 8080:8080 \
+  -p 9090:9090 \
   -e TAA_LLM_API_KEY=your-key \
   -e TAA_JENKINS_URL=https://jenkins.example.com \
   -e TAA_JENKINS_USERNAME=user \
@@ -255,20 +277,26 @@ docker run -d --name analysis-agent \
 
 ## Analysis Flow
 
-The agent follows this analysis flow based on the failure stage:
+The agent follows this analysis path:
 
-1. **Preparation/Deployment Stage Failure**
-   - Parses Jenkins console log to identify the failing stage
-   - If the stage triggered downstream jobs, fetches and analyzes those job logs too
-   - Sends error context to LLM for root cause analysis
+1. **Stage Identification**
+   - Calls Jenkins Workflow API (`wfapi/describe`) to get the authoritative stage list with real names and statuses
+   - Fetches the Jenkinsfile via the replay endpoint for script context
+   - Finds the first genuinely failing stage (not merely skipped due to upstream failure)
+   - Output only includes failure/skipped stages — passing stages are filtered out
 
-2. **Testing Stage Failure**
-   - **Test startup failure** (no tests executed): Analyzes Jenkins logs for startup errors
-   - **Test execution failure** (tests ran): Parses Allure report, analyzes each failed test case individually with LLM (optionally including test source code), then groups failures by root cause
+2. **Non-Test Stage Failure**
+   - Fetches the specific stage log via `wfapi` node logs (step-level, not just stage-level)
+   - If the stage triggered downstream jobs, recursively fetches and analyzes those job logs
+   - Sends the stage log + script context to the LLM for root cause analysis
 
-3. **Report Generation**
-   - Combines all findings into a structured report
-   - Generates bug filing recommendations for issues that warrant tickets
+3. **Testing Stage Failure**
+   - **No tests executed**: Analyzes Jenkins stage logs for startup errors
+   - **Tests ran**: Auto-detects Allure report at `{build_url}/allure`, parses each failed test case, analyzes with LLM, then groups failures by root cause
+
+4. **Report Generation**
+   - Combines all findings into a structured report with real stage names
+   - Generates bug filing recommendations with `summary` + `detail_description`
 
 ## Custom Skills
 

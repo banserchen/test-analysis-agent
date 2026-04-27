@@ -168,14 +168,19 @@ def analyze_log(
 
 @main.command()
 @click.option("--host", default="0.0.0.0", help="API server host")
-@click.option("--port", default=8080, type=int, help="API server port")
+@click.option("--port", default=9090, type=int, help="API server port")
 @click.option("--reload", is_flag=True, help="Enable auto-reload for development")
 def serve(host: str, port: int, reload: bool) -> None:
     """Start the API server.
 
     Runs the FastAPI application for HTTP API access.
     """
+    import os
     import uvicorn
+
+    # Clear system proxy — all services (Jenkins, Allure, Feishu, LLM) are reachable directly.
+    for var in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy", "ALL_PROXY"):
+        os.environ.pop(var, None)
 
     console.print(Panel(
         f"[bold green]Test Analysis Agent API Server[/bold green]\n"

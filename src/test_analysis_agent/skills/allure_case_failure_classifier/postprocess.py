@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+# Valid FailureCategory values (kept in sync with schemas.FailureCategory)
+_VALID_CATEGORIES = {
+    "environment_error", "dependency_error", "deployment_error",
+    "configuration_error", "network_error", "permission_error",
+    "test_startup_failure", "test_case_failure", "test_infrastructure_error",
+    "timeout_error", "resource_error", "function_bug", "unknown",
+}
+
 
 def validate_output(data: dict[str, Any]) -> tuple[bool, list[str]]:
     """校验结构化输出。"""
@@ -11,8 +19,6 @@ def validate_output(data: dict[str, Any]) -> tuple[bool, list[str]]:
 
     if not isinstance(data, dict):
         return False, ["Output must be a JSON object."]
-
-    valid_classes = {"product_bug", "test_bug", "infrastructure", "environment", "flaky", "unknown"}
 
     classifications = data.get("classifications")
     if not isinstance(classifications, list):
@@ -24,9 +30,9 @@ def validate_output(data: dict[str, Any]) -> tuple[bool, list[str]]:
                 continue
             if not isinstance(item.get("test_name"), str) or not item["test_name"]:
                 errors.append(f"classifications[{i}].test_name must be a non-empty string.")
-            fc = item.get("failure_class", "")
-            if fc not in valid_classes:
-                errors.append(f"classifications[{i}].failure_class '{fc}' not in {sorted(valid_classes)}.")
+            fc = item.get("failure_category", "")
+            if fc not in _VALID_CATEGORIES:
+                errors.append(f"classifications[{i}].failure_category '{fc}' not in {sorted(_VALID_CATEGORIES)}.")
             if not isinstance(item.get("reason"), str):
                 errors.append(f"classifications[{i}].reason must be a string.")
             conf = item.get("confidence")
@@ -39,8 +45,8 @@ def validate_output(data: dict[str, Any]) -> tuple[bool, list[str]]:
     else:
         if not isinstance(summary.get("total"), int):
             errors.append("'summary.total' must be an integer.")
-        by_class = summary.get("by_class")
-        if not isinstance(by_class, dict):
-            errors.append("'summary.by_class' must be an object.")
+        by_category = summary.get("by_category")
+        if not isinstance(by_category, dict):
+            errors.append("'summary.by_category' must be an object.")
 
     return len(errors) == 0, errors

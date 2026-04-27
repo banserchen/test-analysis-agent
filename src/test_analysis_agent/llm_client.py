@@ -14,12 +14,39 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Coroutine
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from test_analysis_agent.config import Settings
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class LLMUsage:
+    """Token usage for a single LLM call."""
+
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+
+    @property
+    def total_tokens(self) -> int:
+        return self.prompt_tokens + self.completion_tokens
+
+    def __add__(self, other: LLMUsage) -> LLMUsage:
+        return LLMUsage(
+            prompt_tokens=self.prompt_tokens + other.prompt_tokens,
+            completion_tokens=self.completion_tokens + other.completion_tokens,
+        )
+
+
+@dataclass
+class LLMResponse:
+    """Response from a single LLM call."""
+
+    text: str | None
+    usage: LLMUsage = field(default_factory=LLMUsage)
 
 
 def _deny_permission_requests(request: object, invocation: dict[str, str]) -> object:
@@ -44,8 +71,8 @@ class LLMClient(ABC):
         model: str,
         max_tokens: int = 4096,
         temperature: float = 0.2,
-    ) -> str | None:
-        """Send a chat completion request and return the response text.
+    ) -> LLMResponse:
+        """Send a chat completion request and return response with token usage.
 
         Args:
             system_prompt: The system message.
@@ -55,7 +82,7 @@ class LLMClient(ABC):
             temperature: Sampling temperature.
 
         Returns:
-            The assistant's response text, or None on failure.
+            LLMResponse with text (or None on failure) and token usage.
         """
 
 
@@ -78,7 +105,7 @@ class OpenAIClient(LLMClient):
         model: str,
         max_tokens: int = 4096,
         temperature: float = 0.2,
-    ) -> str | None:
+    ) -> LLMResponse:
         try:
             response = self._client.chat.completions.create(
                 model=model,
@@ -89,10 +116,14 @@ class OpenAIClient(LLMClient):
                 max_tokens=max_tokens,
                 temperature=temperature,
             )
-            return response.choices[0].message.content
+            usage = LLMUsage(
+                prompt_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
+                completion_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
+            )
+            return LLMResponse(text=response.choices[0].message.content, usage=usage)
         except Exception as exc:
             logger.error("OpenAI API call failed: %s", exc)
-            return None
+            return LLMResponse(text=None)
 
 
 class CopilotClient(LLMClient):
@@ -116,9 +147,9 @@ class CopilotClient(LLMClient):
         model: str,
         max_tokens: int = 4096,
         temperature: float = 0.2,
-    ) -> str | None:
+    ) -> LLMResponse:
         try:
-            return _run_async(
+            text = _run_async(
                 self._async_chat_completion(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
@@ -127,9 +158,11 @@ class CopilotClient(LLMClient):
                     temperature=temperature,
                 )
             )
+            # Copilot SDK does not expose token counts; return zeros.
+            return LLMResponse(text=text)
         except Exception as exc:
             logger.error("Copilot SDK call failed: %s", exc)
-            return None
+            return LLMResponse(text=None)
 
     async def _async_chat_completion(
         self,

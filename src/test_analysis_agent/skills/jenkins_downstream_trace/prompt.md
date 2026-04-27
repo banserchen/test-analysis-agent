@@ -4,11 +4,12 @@
 
 ## 分析步骤
 
-1. 从日志中识别所有下游/触发的 Job，关注 `Triggering`、`Starting building`、`Waiting for completion`、`build` 步骤等模式。
-2. 确定每个 Job 的名称、构建编号和最终状态。
-3. 构建按触发顺序排列的调用链列表。
-4. 识别**失败链路**——从根 Job 经子 Job 到失败叶子 Job 的完整路径。
-5. 编写可读的摘要说明。
+1. 从日志中识别所有下游/触发的 Job，关注 `Triggering`、`Starting building:`、`Scheduling project:`、`Waiting for completion`、`build` 步骤等模式。
+2. **不要把 `building`、`building:`、`Build`、`project`、`job` 等关键字当成 job 名**。job 名紧跟在这些关键字之后（例如 `Starting building: 部署白泽仿真车 #1717` 中 job 名是 `部署白泽仿真车`）。
+3. 确定每个 Job 的名称、构建编号和最终状态。
+4. 构建按触发顺序排列的调用链列表。
+5. 识别**失败链路**——从根 Job 经子 Job 到失败叶子 Job 的完整路径。对每个 `status=failure` 的下游 Job，应递归拉取其日志，继续分析它自己触发的下游，直到叶子失败。
+6. 编写可读的摘要说明。
 
 ## 父 Job 日志
 
@@ -33,3 +34,4 @@
   "summary": "..."
 }
 ```
+

@@ -32,7 +32,22 @@ class Settings(BaseSettings):
 
     # API Configuration
     api_host: str = Field(default="0.0.0.0", description="API server host")
-    api_port: int = Field(default=8080, description="API server port")
+    api_port: int = Field(default=9090, description="API server port")
+
+    # Infrastructure inspection (optional)
+    environments_api_url: str = Field(
+        default="",
+        description=(
+            "Base URL of the test environments API (e.g. http://192.168.103.26). "
+            "When set, the infrastructure_inspector skill will SSH into FMS/PP hosts "
+            "to investigate container health when connection errors are detected."
+        ),
+    )
+
+    # Feishu (Lark) integration (optional)
+    feishu_app_id: str = Field(default="", description="Feishu app ID for creating cloud documents")
+    feishu_app_secret: str = Field(default="", description="Feishu app secret for creating cloud documents")
+    feishu_folder_token: str = Field(default="", description="Feishu folder token to store created documents")
 
     model_config = {"env_prefix": "TAA_", "env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 

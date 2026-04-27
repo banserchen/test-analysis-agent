@@ -96,11 +96,13 @@ def _category_to_component(category: str) -> str:
         "network_error": "网络/基础设施",
         "permission_error": "安全/权限",
         "test_startup_failure": "测试基础设施",
-        "test_case_failure": "产品",
+        "test_case_failure": "测试脚本",
         "test_infrastructure_error": "测试基础设施",
         "timeout_error": "性能",
         "resource_error": "基础设施",
-        "code_bug": "产品",
+        "function_bug": "产品功能",
+        # backward compat
+        "code_bug": "产品功能",
     }
     return mapping.get(category, "通用")
 

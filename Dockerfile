@@ -7,7 +7,7 @@ COPY src/ ./src/
 
 RUN pip install --no-cache-dir .
 
-EXPOSE 8080
+EXPOSE 9090
 
 ENTRYPOINT ["test-analysis-agent"]
-CMD ["serve", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["serve", "--host", "0.0.0.0", "--port", "9090"]

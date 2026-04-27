@@ -100,6 +100,45 @@ All tests passed"""
         assert len(deploy_stages) == 1
         assert deploy_stages[0].status == "fail"
 
+    def test_stage_name_preserved(self):
+        """stage_name must carry the actual Jenkins stage label, not enum value."""
+        log = """[Pipeline] { (#1 准备工作)
+Everything fine
+[Pipeline] { (#2 部署服务)
+ERROR: deploy failed with exit code 1"""
+
+        results = parse_log_text(log)
+        names = [r.stage_name for r in results]
+        assert "#1 准备工作" in names
+        assert "#2 部署服务" in names
+
+    def test_numbered_stages_grouped_by_major(self):
+        """All #3.x sub-stages must be grouped into one block."""
+        log = """[Pipeline] { (#3.0 切换测试环境)
+OK
+[Pipeline] { (#3.1 准备ansible)
+OK
+[Pipeline] { (#3.2 仿真车部署)
+ERROR: container failed"""
+
+        results = parse_log_text(log)
+        # All #3.x go into one block
+        major3 = [r for r in results if r.stage_name.startswith("#3")]
+        assert len(major3) == 1
+        assert major3[0].status == "fail"
+        # sub_stages should include all three
+        assert any("3.2" in s for s in major3[0].sub_stages)
+
+    def test_no_such_container_is_noise(self):
+        """'No such container' Docker cleanup messages must not mark a stage as fail."""
+        log = """[Pipeline] { (#1 清理)
+Error response from daemon: No such container: test-auto
+Cleanup complete"""
+
+        results = parse_log_text(log)
+        assert len(results) == 1
+        assert results[0].status == "pass"
+
     def test_parse_unknown_log(self):
         log = """Some random log output
 ERROR: Something went wrong

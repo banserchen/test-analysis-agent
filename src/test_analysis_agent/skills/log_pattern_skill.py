@@ -24,9 +24,10 @@ _KNOWN_PATTERNS: list[tuple[re.Pattern[str], FailureCategory, str]] = [
         FailureCategory.NETWORK_ERROR,
         "DNS resolution failure detected",
     ),
-    # Permission issues
+    # Permission issues — exclude pip/package-manager WARNING lines which report
+    # cache/ownership issues that are informational, not actual failures.
     (
-        re.compile(r"(?:Permission denied|Access denied|Forbidden|403 Forbidden)", re.IGNORECASE),
+        re.compile(r"(?:Permission denied|Access denied|403 Forbidden)", re.IGNORECASE),
         FailureCategory.PERMISSION_ERROR,
         "Permission or access denial detected",
     ),
@@ -41,9 +42,10 @@ _KNOWN_PATTERNS: list[tuple[re.Pattern[str], FailureCategory, str]] = [
         FailureCategory.RESOURCE_ERROR,
         "Memory exhaustion detected",
     ),
-    # Timeout issues
+    # Timeout issues. We deliberately require an explicit timeout qualifier
+    # to avoid matching benign git arguments like ``# timeout=10``.
     (
-        re.compile(r"(?:timed? ?out|timeout|deadline exceeded)", re.IGNORECASE),
+        re.compile(r"(?:timed\s*out|\bdeadline\s+exceeded\b|\btimeout\s+(?:of|after|expired|exceeded|reached)\b)", re.IGNORECASE),
         FailureCategory.TIMEOUT_ERROR,
         "Timeout detected",
     ),
@@ -82,6 +84,18 @@ _KNOWN_PATTERNS: list[tuple[re.Pattern[str], FailureCategory, str]] = [
     ),
 ]
 
+# Lines matching these patterns are noise/informational and are excluded from analysis.
+_NOISE_LINE_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"^\s*WARNING:", re.IGNORECASE),           # pip/tool warnings
+    re.compile(r"Requirement already satisfied", re.IGNORECASE),  # pip install output
+    re.compile(r"^\s*#\s*timeout=\d+", re.IGNORECASE),    # git/jenkins timeout params
+    re.compile(r"\[notice\]", re.IGNORECASE),              # pip notices
+]
+
+
+def _is_noise_line(line: str) -> bool:
+    return any(p.search(line) for p in _NOISE_LINE_PATTERNS)
+
 
 class LogPatternAnalyzerSkill(BaseSkill):
     """Built-in skill that matches known error patterns in logs."""
@@ -95,21 +109,35 @@ class LogPatternAnalyzerSkill(BaseSkill):
         return bool(context.get("log_text"))
 
     def execute(self, context: dict[str, Any]) -> dict[str, Any]:
-        """Scan logs for known patterns."""
+        """Scan logs for known patterns, filtering out noise lines."""
         log_text = context.get("log_text", "")
+        lines = log_text.splitlines()
+
+        # Exclude noise lines before matching
+        meaningful_lines = [ln for ln in lines if not _is_noise_line(ln)]
+
         findings: list[dict[str, str]] = []
 
         for pattern, category, description in _KNOWN_PATTERNS:
-            matches = pattern.findall(log_text)
-            if matches:
-                findings.append(
-                    {
-                        "category": category.value,
-                        "description": description,
-                        "match_count": str(len(matches)),
-                        "sample_match": matches[0] if matches else "",
-                    }
-                )
+            matching_lines = [ln.strip() for ln in meaningful_lines if pattern.search(ln)]
+            if not matching_lines:
+                continue
+
+            # Show up to 3 matching lines as log evidence
+            evidence_lines = matching_lines[:3]
+            if len(matching_lines) > 3:
+                evidence_lines.append(f"... and {len(matching_lines) - 3} more")
+            evidence = "\n".join(evidence_lines)
+
+            findings.append(
+                {
+                    "category": category.value,
+                    "description": description,
+                    "match_count": str(len(matching_lines)),
+                    "sample_match": matching_lines[0],
+                    "log_evidence": evidence,
+                }
+            )
 
         return {
             "pattern_findings": findings,
